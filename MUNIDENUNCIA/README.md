@@ -16,6 +16,8 @@ CÉDULAS PARA CONSULTAS:
 2-0345-0678 - María Rodríguez López (Al día)
 3-0456-0789 - Carlos Jiménez Castro (Adeuda ₡125,000)
 
+Se borra wwwroot lib para que no se suba a github
+
 Migración y Creación de Base de Datos
 Abra Package Manager Console y ejecute los comandos de Entity Framework.
 Add-Migration InitialCreate
