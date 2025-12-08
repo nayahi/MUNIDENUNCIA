@@ -1,12 +1,13 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MUNIDENUNCIA.Data;
 using MUNIDENUNCIA.Models;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace MUNIDENUNCIA.Web.Controllers
+namespace MUNIDENUNCIA.Controllers
 {
     /// <summary>
     /// Controlador para gestión de denuncias ciudadanas
@@ -313,6 +314,19 @@ namespace MUNIDENUNCIA.Web.Controllers
 
             TempData["Mensaje"] = "Estado actualizado correctamente";
             return RedirectToAction(nameof(Details), new { id = id });
+        }
+
+        [Authorize]
+        [HttpGet]
+        public IActionResult VerificarClaims()
+        {
+            var claims = User.Claims.Select(c => new
+            {
+                Type = c.Type,
+                Value = c.Value
+            }).ToList();
+
+            return Json(claims);
         }
     }
 }

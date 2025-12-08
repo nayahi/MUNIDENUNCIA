@@ -168,38 +168,189 @@ namespace MUNIDENUNCIA.Data
                     .HasDatabaseName("IX_Comentarios_FechaComentario");
             });
 
-            // Configuración de la entidad Denuncia
+            // Configuración de la entidad Denuncia - SEMANA 4
             builder.Entity<Denuncia>(entity =>
             {
+                // Configuración de la tabla
                 entity.ToTable("Denuncias");
                 entity.HasKey(e => e.Id);
 
-                // Índices para optimizar búsquedas
-                entity.HasIndex(e => e.Cedula)
-                    .HasDatabaseName("IX_Denuncias_Cedula");
+                // ========================================================================
+                // CONFIGURACIÓN DE CAMPOS CIFRADOS
+                // Estos campos almacenan datos sensibles cifrados con Data Protection API
+                // ========================================================================
 
+                entity.Property(e => e.CedulaCifrada)
+                    .IsRequired()
+                    .HasMaxLength(500)  // Suficiente espacio para datos cifrados
+                    .HasComment("Cédula del ciudadano cifrada con Data Protection API");
+
+                entity.Property(e => e.TelefonoCifrado)
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasComment("Teléfono del ciudadano cifrado con Data Protection API");
+
+                entity.Property(e => e.EmailCifrado)
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasComment("Email del ciudadano cifrado con Data Protection API");
+
+                // ========================================================================
+                // CONFIGURACIÓN DE CAMPOS NO SENSIBLES
+                // ========================================================================
+
+                entity.Property(e => e.NombreCompleto)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.Ubicacion)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                entity.Property(e => e.Descripcion)
+                    .IsRequired()
+                    .HasMaxLength(1000);
+
+                entity.Property(e => e.Estado)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasDefaultValue("Recibida");
+
+                entity.Property(e => e.Observaciones)
+                    .HasMaxLength(500);
+
+                // ========================================================================
+                // CONFIGURACIÓN DE CAMPOS DE ARCHIVO - SEMANA 4
+                // ========================================================================
+
+                entity.Property(e => e.ArchivoNombreOriginal)
+                    .HasMaxLength(255)
+                    .HasComment("Nombre original del archivo PDF subido");
+
+                entity.Property(e => e.ArchivoNombreServidor)
+                    .HasMaxLength(255)
+                    .HasComment("Nombre aleatorio del archivo en el servidor");
+
+                entity.Property(e => e.ArchivoRuta)
+                    .HasMaxLength(500)
+                    .HasComment("Ruta completa donde se almacenó el archivo");
+
+                entity.Property(e => e.ArchivoTipoMime)
+                    .HasMaxLength(100)
+                    .HasComment("Tipo MIME del archivo (application/pdf)");
+
+                // ========================================================================
+                // CONFIGURACIÓN DE FECHAS
+                // ========================================================================
+
+                entity.Property(e => e.FechaCreacion)
+                    .IsRequired()
+                    .HasDefaultValueSql("GETUTCDATE()")
+                    .HasComment("Fecha de creación de la denuncia");
+
+                entity.Property(e => e.FechaActualizacion)
+                    .HasComment("Fecha de última actualización");
+
+                entity.Property(e => e.FechaResolucion)
+                    .HasComment("Fecha en que se resolvió la denuncia");
+
+                entity.Property(e => e.ArchivoFechaSubida)
+                    .HasComment("Fecha en que se subió el archivo PDF");
+
+                // ========================================================================
+                // RELACIÓN CON USUARIO (FUNCIONARIO ASIGNADO)
+                // ========================================================================
+
+                entity.Property(e => e.AsignadoAUserId)
+                    .HasMaxLength(450); // Tamaño del Id de Identity
+
+                // Relación opcional con AspNetUsers
+                entity.HasOne<Microsoft.AspNetCore.Identity.IdentityUser>()
+                    .WithMany()
+                    .HasForeignKey(e => e.AsignadoAUserId)
+                    .OnDelete(DeleteBehavior.SetNull); // Si se elimina el usuario, el campo se pone NULL
+
+                // ========================================================================
+                // ÍNDICES PARA OPTIMIZACIÓN DE CONSULTAS
+                // ========================================================================
+
+                // Índice para búsquedas por estado
                 entity.HasIndex(e => e.Estado)
                     .HasDatabaseName("IX_Denuncias_Estado");
 
+                // Índice para búsquedas por fecha de creación
                 entity.HasIndex(e => e.FechaCreacion)
                     .HasDatabaseName("IX_Denuncias_FechaCreacion");
 
+                // Índice para búsquedas por categoría
                 entity.HasIndex(e => e.Categoria)
                     .HasDatabaseName("IX_Denuncias_Categoria");
 
-                // Conversión del enum a string
-                entity.Property(e => e.Categoria)
-                    .HasConversion<string>()
-                    .HasMaxLength(50);
+                // Índice para búsquedas por funcionario asignado
+                entity.HasIndex(e => e.AsignadoAUserId)
+                    .HasDatabaseName("IX_Denuncias_AsignadoA");
 
-                // Valores predeterminados
-                entity.Property(e => e.FechaCreacion)
-                    .HasDefaultValueSql("GETUTCDATE()");
+                // Índice compuesto para consultas de denuncias por estado y fecha
+                entity.HasIndex(e => new { e.Estado, e.FechaCreacion })
+                    .HasDatabaseName("IX_Denuncias_Estado_Fecha");
 
-                entity.Property(e => e.Estado)
-                    .HasDefaultValue("Pendiente")
-                    .HasMaxLength(50);
+                // ========================================================================
+                // NOTA PEDAGÓGICA SOBRE PROPIEDADES [NotMapped]
+                // ========================================================================
+                // Las propiedades Cedula, Telefono y Email (sin el sufijo "Cifrada/o")
+                // están marcadas con [NotMapped] en el modelo.
+                // 
+                // Esto significa que Entity Framework NO intentará mapearlas a columnas
+                // de la base de datos. Son propiedades en memoria que se usan así:
+                //
+                // AL GUARDAR:
+                // 1. Servicio recibe: denuncia.Cedula = "1-0234-0567"
+                // 2. Servicio cifra y asigna: denuncia.CedulaCifrada = _protector.Protect(denuncia.Cedula)
+                // 3. EF guarda solo CedulaCifrada a la BD
+                //
+                // AL LEER:
+                // 1. EF carga: denuncia.CedulaCifrada = "CfDJ8..." (cifrado)
+                // 2. Servicio descifra y asigna: denuncia.Cedula = _protector.Unprotect(denuncia.CedulaCifrada)
+                // 3. Vista usa: @Model.Cedula (descifrado)
+                //
+                // Esta separación mantiene la lógica de cifrado/descifrado centralizada
+                // y evita exponer datos sensibles en logs o errores.
+                // ========================================================================
             });
+
+
+            //// Configuración de la entidad Denuncia
+            //builder.Entity<Denuncia>(entity =>
+            //{
+            //    entity.ToTable("Denuncias");
+            //    entity.HasKey(e => e.Id);
+
+            //    // Índices para optimizar búsquedas
+            //    entity.HasIndex(e => e.Cedula)
+            //        .HasDatabaseName("IX_Denuncias_Cedula");
+
+            //    entity.HasIndex(e => e.Estado)
+            //        .HasDatabaseName("IX_Denuncias_Estado");
+
+            //    entity.HasIndex(e => e.FechaCreacion)
+            //        .HasDatabaseName("IX_Denuncias_FechaCreacion");
+
+            //    entity.HasIndex(e => e.Categoria)
+            //        .HasDatabaseName("IX_Denuncias_Categoria");
+
+            //    // Conversión del enum a string
+            //    entity.Property(e => e.Categoria)
+            //        .HasConversion<string>()
+            //        .HasMaxLength(50);
+
+            //    // Valores predeterminados
+            //    entity.Property(e => e.FechaCreacion)
+            //        .HasDefaultValueSql("GETUTCDATE()");
+
+            //    entity.Property(e => e.Estado)
+            //        .HasDefaultValue("Pendiente")
+            //        .HasMaxLength(50);
+            //});
 
             // Datos semilla para tipos de construcción (opcional)
             // Estos datos se pueden cargar también mediante scripts SQL
@@ -219,3 +370,41 @@ namespace MUNIDENUNCIA.Data
         }
     }
 }
+
+// ============================================================================
+// NOTAS IMPORTANTES PARA LA IMPLEMENTACIÓN
+// ============================================================================
+//
+// 1. MIGRACIÓN DE DATOS EXISTENTES:
+//    Si ya existen denuncias en la BD con campos Cedula, Telefono, Email,
+//    necesitarás una migración de datos para cifrarlos:
+//    
+//    a) Crear nueva migración: Add-Migration UpdateDenunciaCifrado
+//    b) ANTES de Update-Database, editar la migración para:
+//       - Agregar columnas nuevas (CedulaCifrada, etc.)
+//       - Copiar datos cifrados de las columnas antiguas
+//       - Eliminar columnas antiguas
+//    c) Ejecutar: Update-Database
+//
+// 2. PERFORMANCE:
+//    El cifrado/descifrado tiene un costo computacional mínimo.
+//    Para listas grandes, considerar cargar solo datos necesarios
+//    y descifrar bajo demanda.
+//
+// 3. BÚSQUEDA DE DATOS CIFRADOS:
+//    NO se pueden buscar datos cifrados directamente con LIKE o =
+//    porque el cifrado cambia completamente el valor.
+//    
+//    Opciones:
+//    a) Mantener hash del valor para búsquedas exactas
+//    b) Descifrar en memoria y filtrar (para conjuntos pequeños)
+//    c) Usar índices de texto completo en campos no cifrados
+//
+// 4. RESPALDO DE CLAVES:
+//    Las claves de Data Protection se almacenan en:
+//    %LOCALAPPDATA%\ASP.NET\DataProtection-Keys
+//    
+//    CRÍTICO: Respaldar estas claves en producción.
+//    Sin ellas, los datos cifrados son IRRECUPERABLES.
+//
+// ============================================================================

@@ -1,0 +1,46 @@
+@model MUNIDENUNCIA.Models.Denuncia
+
+@{
+    ViewData["Title"] = "Detalles - VULNERABLE";
+}
+
+<div class="container mt-4">
+    <div class="alert alert-danger">
+        <i class="fas fa-unlock"></i> Datos sin cifrar visibles para cualquiera
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-warning">
+            <h3>Denuncia #@Model.Id (Versión Insegura)</h3>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Nombre:</dt>
+                <dd class="col-sm-9">@Model.NombreCompleto</dd>
+
+                <dt class="col-sm-3">Cédula (sin cifrar):</dt>
+                <dd class="col-sm-9 text-danger">@Model.Cedula</dd>
+
+                <dt class="col-sm-3">Email (sin cifrar):</dt>
+                <dd class="col-sm-9 text-danger">@Model.Email</dd>
+
+                <dt class="col-sm-3">Teléfono (sin cifrar):</dt>
+                <dd class="col-sm-9 text-danger">@Model.Telefono</dd>
+
+                <dt class="col-sm-3">Categoría:</dt>
+                <dd class="col-sm-9">@Model.Categoria</dd>
+
+                <dt class="col-sm-3">Ubicación:</dt>
+                <dd class="col-sm-9">@Model.Ubicacion</dd>
+
+                <dt class="col-sm-3">Descripción:</dt>
+                <dd class="col-sm-9">@Model.Descripcion</dd>
+
+                <dt class="col-sm-3">Estado:</dt>
+                <dd class="col-sm-9">@Model.Estado</dd>
+            </dl>
+
+            <a asp-action="Index" class="btn btn-secondary">Volver</a>
+        </div>
+    </div>
+</div>

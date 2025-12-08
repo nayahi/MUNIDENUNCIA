@@ -1,0 +1,252 @@
+@model MUNIDENUNCIA.Models.Denuncia
+
+@{
+    ViewData["Title"] = "Denuncia Registrada";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            
+            <!-- Mensaje de Éxito -->
+            <div class="alert alert-success shadow text-center" role="alert">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-check-circle text-success"></i>
+                </h1>
+                <h2 class="alert-heading">¡Denuncia Registrada Exitosamente!</h2>
+                <hr>
+                <p class="lead">
+                    Su denuncia ha sido recibida y registrada en nuestro sistema.
+                </p>
+                <p class="mb-0">
+                    Un funcionario municipal revisará su caso a la brevedad posible.
+                </p>
+            </div>
+
+            <!-- Información de la Denuncia -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-file-alt"></i>
+                        Información de su Denuncia
+                    </h3>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12 text-center">
+                            <h4 class="text-primary">
+                                Número de Denuncia: <strong>#@Model.Id</strong>
+                            </h4>
+                            <p class="text-muted">
+                                Guarde este número para darle seguimiento a su denuncia
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <dl class="row">
+                        <dt class="col-sm-4">Categoría:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge badge-secondary p-2">
+                                @Model.Categoria.ToString().Replace("_", " ")
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4">Ubicación:</dt>
+                        <dd class="col-sm-8">
+                            <i class="fas fa-map-marker-alt text-danger"></i>
+                            @Model.Ubicacion
+                        </dd>
+
+                        <dt class="col-sm-4">Fecha de Registro:</dt>
+                        <dd class="col-sm-8">
+                            @Model.FechaCreacion.ToString("dddd, dd 'de' MMMM 'de' yyyy", 
+                                new System.Globalization.CultureInfo("es-CR"))
+                            <br />
+                            <small class="text-muted">Hora: @Model.FechaCreacion.ToString("HH:mm")</small>
+                        </dd>
+
+                        <dt class="col-sm-4">Estado:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge badge-info badge-lg">@Model.Estado</span>
+                        </dd>
+
+                        @if (!string.IsNullOrEmpty(Model.ArchivoNombreOriginal))
+                        {
+                            <dt class="col-sm-4">Archivo Adjunto:</dt>
+                            <dd class="col-sm-8">
+                                <i class="fas fa-file-pdf text-danger"></i>
+                                @Model.ArchivoNombreOriginal
+                                <br />
+                                <small class="text-muted">
+                                    Tamaño: @((Model.ArchivoTamanoBytes.Value / 1024.0).ToString("N2")) KB
+                                </small>
+                            </dd>
+                        }
+                    </dl>
+
+                </div>
+            </div>
+
+            <!-- Información de Contacto -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user"></i>
+                        Datos de Contacto Registrados
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p>
+                        <strong>Nombre:</strong> @Model.NombreCompleto
+                    </p>
+                    <p>
+                        <strong>Email:</strong> @Model.Email
+                    </p>
+                    <p class="mb-0">
+                        <strong>Teléfono:</strong> @Model.Telefono
+                    </p>
+                    
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <i class="fas fa-envelope"></i>
+                        Le enviaremos notificaciones sobre el estado de su denuncia a su correo electrónico.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Próximos Pasos -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-tasks"></i>
+                        Próximos Pasos
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li class="mb-2">
+                            <strong>Revisión Inicial:</strong> Un funcionario municipal revisará su denuncia 
+                            en un plazo de 24-48 horas hábiles.
+                        </li>
+                        <li class="mb-2">
+                            <strong>Evaluación:</strong> Se evaluará la procedencia de su denuncia y se 
+                            determinará el curso de acción apropiado.
+                        </li>
+                        <li class="mb-2">
+                            <strong>Seguimiento:</strong> Puede consultar el estado de su denuncia en 
+                            cualquier momento usando el número de denuncia #@Model.Id
+                        </li>
+                        <li class="mb-0">
+                            <strong>Resolución:</strong> Una vez resuelta, se le notificará por correo 
+                            electrónico con los detalles de las acciones tomadas.
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Información de Privacidad -->
+            <div class="card shadow border-warning mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-lock"></i>
+                        Protección de Datos Personales
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p>
+                        <strong>Sus datos están protegidos:</strong>
+                    </p>
+                    <ul class="mb-2">
+                        <li>
+                            Su cédula, teléfono y correo electrónico han sido <strong>cifrados</strong> 
+                            antes de almacenarse en la base de datos.
+                        </li>
+                        <li>
+                            Solo personal autorizado de la municipalidad puede acceder a su información.
+                        </li>
+                        <li>
+                            El sistema cumple con la <strong>Ley 8968 de Protección de Datos Personales</strong> 
+                            de Costa Rica.
+                        </li>
+                    </ul>
+                    
+                    @if (!string.IsNullOrEmpty(Model.ArchivoNombreOriginal))
+                    {
+                        <p class="mb-0">
+                            El archivo PDF que adjuntó fue validado con múltiples controles de seguridad 
+                            para asegurar que es un documento legítimo y seguro.
+                        </p>
+                    }
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="text-center mb-4">
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-primary btn-lg">
+                    <i class="fas fa-eye"></i>
+                    Ver Detalles Completos
+                </a>
+                
+                <a asp-action="Index" class="btn btn-secondary btn-lg ml-2">
+                    <i class="fas fa-list"></i>
+                    Ver Todas Mis Denuncias
+                </a>
+                
+                <a asp-action="Create" class="btn btn-success btn-lg ml-2">
+                    <i class="fas fa-plus"></i>
+                    Registrar Otra Denuncia
+                </a>
+            </div>
+
+            <!-- Información de Contacto Municipal -->
+            <div class="card shadow border-info">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-phone"></i>
+                        Contacto Municipal
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        <strong>Su Municipalidad/strong><br />
+                        Departamento de Servicios Municipales
+                    </p>
+                    <p>
+                        <i class="fas fa-phone"></i> Teléfono: 2000-2000<br />
+                        <i class="fas fa-envelope"></i> Email: servicios@sumunicipalidad.go.cr<br />
+                        <i class="fas fa-clock"></i> Horario: Lunes a Viernes, 8:00 AM - 4:00 PM
+                    </p>
+                    <p class="text-muted mb-0">
+                        <small>
+                            Si tiene alguna duda o consulta adicional, puede contactarnos 
+                            a través de estos medios durante nuestro horario de atención.
+                        </small>
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Imprimir esta página
+        function imprimirConfirmacion() {
+            window.print();
+        }
+
+        // Agregar botón de imprimir
+        $(document).ready(function() {
+            $('.card-body:first').prepend(
+                '<div class="text-right mb-3">' +
+                '<button onclick="imprimirConfirmacion()" class="btn btn-sm btn-outline-secondary">' +
+                '<i class="fas fa-print"></i> Imprimir Confirmación' +
+                '</button>' +
+                '</div>'
+            );
+        });
+    </script>
+}

@@ -1,0 +1,256 @@
+@model MUNIDENUNCIA.ViewModels.CambiarEstadoDenunciaViewModel
+
+@{
+    ViewData["Title"] = "Cambiar Estado de Denuncia";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">
+                        <i class="fas fa-exchange-alt"></i>
+                        Cambiar Estado de Denuncia
+                    </h2>
+                </div>
+
+                <div class="card-body">
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Funcionario:</strong> @User.Identity.Name
+                        <br />
+                        <strong>Fecha:</strong> @DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+                    </div>
+
+                    <!-- Información de Contexto de la Denuncia -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-file-alt"></i>
+                                Denuncia #@Model.DenunciaId
+                            </h5>
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Ciudadano:</dt>
+                                <dd class="col-sm-8">@Model.NombreCiudadano</dd>
+
+                                <dt class="col-sm-4">Categoría:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge badge-secondary">@Model.CategoriaActual</span>
+                                </dd>
+
+                                <dt class="col-sm-4">Ubicación:</dt>
+                                <dd class="col-sm-8">@Model.UbicacionActual</dd>
+
+                                <dt class="col-sm-4">Estado Actual:</dt>
+                                <dd class="col-sm-8">
+                                    @switch (Model.EstadoActual)
+                                    {
+                                        case "Recibida":
+                                            <span class="badge badge-info badge-lg">@Model.EstadoActual</span>
+                                            break;
+                                        case "EnProceso":
+                                            <span class="badge badge-warning badge-lg">En Proceso</span>
+                                            break;
+                                        case "Resuelta":
+                                            <span class="badge badge-success badge-lg">Resuelta</span>
+                                            break;
+                                        case "Rechazada":
+                                            <span class="badge badge-danger badge-lg">Rechazada</span>
+                                            break;
+                                        default:
+                                            <span class="badge badge-secondary badge-lg">@Model.EstadoActual</span>
+                                            break;
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-exclamation-circle"></i>
+                                Por favor corrija los siguientes errores:
+                            </h5>
+                            <hr>
+                            <ul class="mb-0">
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    <!-- Formulario de Cambio de Estado -->
+                    <form asp-action="CambiarEstado" method="post">
+                        
+                        <!-- TOKEN ANTI-CSRF -->
+                        @Html.AntiForgeryToken()
+                        
+                        <!-- Campo oculto con el ID -->
+                        <input type="hidden" asp-for="DenunciaId" />
+                        <input type="hidden" asp-for="EstadoActual" />
+                        <input type="hidden" asp-for="CategoriaActual" />
+                        <input type="hidden" asp-for="UbicacionActual" />
+                        <input type="hidden" asp-for="NombreCiudadano" />
+
+                        <div class="form-group">
+                            <label asp-for="NuevoEstado" class="font-weight-bold">
+                                Nuevo Estado <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="NuevoEstado" class="form-control form-control-lg" required>
+                                <option value="">-- Seleccione el nuevo estado --</option>
+                                <option value="Recibida" class="text-info">Recibida</option>
+                                <option value="EnProceso" class="text-warning">En Proceso</option>
+                                <option value="Resuelta" class="text-success">Resuelta</option>
+                                <option value="Rechazada" class="text-danger">Rechazada</option>
+                            </select>
+                            <span asp-validation-for="NuevoEstado" class="text-danger"></span>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Guía de Estados:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li><strong>Recibida:</strong> La denuncia fue registrada y está pendiente de revisión</li>
+                                <li><strong>En Proceso:</strong> Un funcionario está trabajando en resolver la denuncia</li>
+                                <li><strong>Resuelta:</strong> El problema reportado fue solucionado exitosamente</li>
+                                <li><strong>Rechazada:</strong> La denuncia no procede o no es competencia municipal</li>
+                            </ul>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Observaciones" class="font-weight-bold">
+                                Observaciones del Funcionario <span class="text-danger">*</span>
+                            </label>
+                            <textarea asp-for="Observaciones" 
+                                      class="form-control" 
+                                      rows="5"
+                                      placeholder="Describa las acciones tomadas, razones del cambio de estado, información adicional..."
+                                      required></textarea>
+                            <small class="form-text text-muted">
+                                Mínimo 10 caracteres, máximo 500 caracteres. 
+                                Esta información será visible para el ciudadano.
+                            </small>
+                            <span asp-validation-for="Observaciones" class="text-danger"></span>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-user-shield"></i>
+                            <strong>Registro de Auditoría:</strong>
+                            Este cambio de estado quedará registrado con su usuario 
+                            (@User.Identity.Name) y la fecha/hora actual para propósitos 
+                            de auditoría y trazabilidad.
+                        </div>
+
+                        <div class="form-group text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save"></i>
+                                Guardar Cambio de Estado
+                            </button>
+                            <a asp-action="Details" asp-route-id="@Model.DenunciaId" 
+                               class="btn btn-secondary btn-lg ml-2">
+                                <i class="fas fa-times"></i>
+                                Cancelar
+                            </a>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+            <!-- Nota de Autorización -->
+            <div class="card mt-3 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shield-alt"></i>
+                        Control de Acceso
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <strong>Autorización Verificada:</strong>
+                    </p>
+                    <ul class="mb-0">
+                        <li>
+                            <strong>Usuario Autenticado:</strong> @User.Identity.Name
+                        </li>
+                        <li>
+                            <strong>Rol:</strong> 
+                            @if (User.IsInRole("Administrador"))
+                            {
+                                <span class="badge badge-danger">Administrador</span>
+                            }
+                            else if (User.IsInRole("Funcionario"))
+                            {
+                                <span class="badge badge-warning">Funcionario</span>
+                            }
+                        </li>
+                        <li>
+                            <strong>Permiso:</strong> Gestión de Estados de Denuncias
+                        </li>
+                        <li>
+                            <strong>Protección CSRF:</strong> Token anti-falsificación activo
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Actualizar el color del select según la opción seleccionada
+        $('#NuevoEstado').on('change', function() {
+            var $this = $(this);
+            var selectedOption = $this.find('option:selected');
+            
+            // Remover clases anteriores
+            $this.removeClass('border-info border-warning border-success border-danger');
+            
+            // Agregar clase según el estado seleccionado
+            var value = $this.val();
+            if (value === 'Recibida') {
+                $this.addClass('border-info');
+            } else if (value === 'EnProceso') {
+                $this.addClass('border-warning');
+            } else if (value === 'Resuelta') {
+                $this.addClass('border-success');
+            } else if (value === 'Rechazada') {
+                $this.addClass('border-danger');
+            }
+        });
+
+        // Confirmar antes de enviar
+        $('form').on('submit', function(e) {
+            var nuevoEstado = $('#NuevoEstado option:selected').text().trim();
+            var observaciones = $('#Observaciones').val().trim();
+            
+            if (observaciones.length < 10) {
+                e.preventDefault();
+                alert('Las observaciones deben tener al menos 10 caracteres');
+                return false;
+            }
+            
+            if (!confirm('¿Está seguro que desea cambiar el estado a "' + nuevoEstado + '"?')) {
+                e.preventDefault();
+                return false;
+            }
+            
+            return true;
+        });
+    </script>
+}

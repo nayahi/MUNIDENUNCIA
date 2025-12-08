@@ -1,0 +1,321 @@
+@model MUNIDENUNCIA.Models.Denuncia
+
+@{
+    ViewData["Title"] = $"Denuncia #{Model.Id}";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">
+                            <i class="fas fa-file-alt"></i>
+                            Denuncia #@Model.Id
+                        </h2>
+                        <div>
+                            @switch (Model.Estado)
+                            {
+                                case "Recibida":
+                                    <span class="badge badge-info badge-lg">@Model.Estado</span>
+                                    break;
+                                case "EnProceso":
+                                    <span class="badge badge-warning badge-lg">En Proceso</span>
+                                    break;
+                                case "Resuelta":
+                                    <span class="badge badge-success badge-lg">Resuelta</span>
+                                    break;
+                                case "Rechazada":
+                                    <span class="badge badge-danger badge-lg">Rechazada</span>
+                                    break;
+                                default:
+                                    <span class="badge badge-secondary badge-lg">@Model.Estado</span>
+                                    break;
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    
+                    @if (TempData["Mensaje"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle"></i> @TempData["Mensaje"]
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    <!-- Información del Ciudadano -->
+                    <fieldset class="border p-3 mb-4">
+                        <legend class="w-auto px-2 text-primary">
+                            <i class="fas fa-user"></i> Información del Ciudadano
+                        </legend>
+                        
+                        <dl class="row">
+                            <dt class="col-sm-3">Nombre Completo:</dt>
+                            <dd class="col-sm-9">@Model.NombreCompleto</dd>
+
+                            <dt class="col-sm-3">
+                                Cédula:
+                                @if (User.IsInRole("Funcionario") || User.IsInRole("Administrador"))
+                                {
+                                    <i class="fas fa-unlock text-success" title="Dato descifrado"></i>
+                                }
+                            </dt>
+                            <dd class="col-sm-9">
+                                @Model.Cedula
+                                @if (User.IsInRole("Funcionario") || User.IsInRole("Administrador"))
+                                {
+                                    <small class="text-muted ml-2">
+                                        (Cifrado en BD con Data Protection API)
+                                    </small>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-3">
+                                Correo Electrónico:
+                                @if (User.IsInRole("Funcionario") || User.IsInRole("Administrador"))
+                                {
+                                    <i class="fas fa-unlock text-success" title="Dato descifrado"></i>
+                                }
+                            </dt>
+                            <dd class="col-sm-9">
+                                <a href="mailto:@Model.Email">@Model.Email</a>
+                                @if (User.IsInRole("Funcionario") || User.IsInRole("Administrador"))
+                                {
+                                    <small class="text-muted ml-2">
+                                        (Cifrado en BD con Data Protection API)
+                                    </small>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-3">
+                                Teléfono:
+                                @if (User.IsInRole("Funcionario") || User.IsInRole("Administrador"))
+                                {
+                                    <i class="fas fa-unlock text-success" title="Dato descifrado"></i>
+                                }
+                            </dt>
+                            <dd class="col-sm-9">
+                                @Model.Telefono
+                                @if (User.IsInRole("Funcionario") || User.IsInRole("Administrador"))
+                                {
+                                    <small class="text-muted ml-2">
+                                        (Cifrado en BD con Data Protection API)
+                                    </small>
+                                }
+                            </dd>
+                        </dl>
+                    </fieldset>
+
+                    <!-- Información de la Denuncia -->
+                    <fieldset class="border p-3 mb-4">
+                        <legend class="w-auto px-2 text-primary">
+                            <i class="fas fa-file-alt"></i> Detalles de la Denuncia
+                        </legend>
+                        
+                        <dl class="row">
+                            <dt class="col-sm-3">Categoría:</dt>
+                            <dd class="col-sm-9">
+                                <span class="badge badge-secondary p-2">
+                                    @Model.Categoria.ToString().Replace("_", " ")
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-3">Ubicación:</dt>
+                            <dd class="col-sm-9">
+                                <i class="fas fa-map-marker-alt text-danger"></i>
+                                @Model.Ubicacion
+                            </dd>
+
+                            <dt class="col-sm-3">Descripción:</dt>
+                            <dd class="col-sm-9">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        @Model.Descripcion
+                                    </div>
+                                </div>
+                            </dd>
+                        </dl>
+                    </fieldset>
+
+                    <!-- Archivo Adjunto - SEMANA 4 -->
+                    @if (!string.IsNullOrEmpty(Model.ArchivoNombreOriginal))
+                    {
+                        <fieldset class="border p-3 mb-4">
+                            <legend class="w-auto px-2 text-primary">
+                                <i class="fas fa-file-pdf"></i> Archivo de Evidencia
+                            </legend>
+                            
+                            <dl class="row">
+                                <dt class="col-sm-3">Archivo:</dt>
+                                <dd class="col-sm-9">
+                                    <i class="fas fa-file-pdf text-danger"></i>
+                                    @Model.ArchivoNombreOriginal
+                                </dd>
+
+                                <dt class="col-sm-3">Tamaño:</dt>
+                                <dd class="col-sm-9">
+                                    @((Model.ArchivoTamanoBytes.Value / 1024.0).ToString("N2")) KB
+                                </dd>
+
+                                <dt class="col-sm-3">Fecha de carga:</dt>
+                                <dd class="col-sm-9">
+                                    @Model.ArchivoFechaSubida?.ToString("dd/MM/yyyy HH:mm")
+                                </dd>
+
+                                <dt class="col-sm-3">Acciones:</dt>
+                                <dd class="col-sm-9">
+                                    <a asp-action="DescargarArchivo" asp-route-id="@Model.Id" 
+                                       class="btn btn-success btn-sm">
+                                        <i class="fas fa-download"></i>
+                                        Descargar PDF
+                                    </a>
+                                </dd>
+                            </dl>
+
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-shield-alt"></i>
+                                <strong>Seguridad:</strong> Este archivo fue validado al momento de la carga 
+                                para asegurar que es un PDF legítimo y no contiene contenido malicioso.
+                            </div>
+                        </fieldset>
+                    }
+
+                    <!-- Información de Control -->
+                    <fieldset class="border p-3 mb-4">
+                        <legend class="w-auto px-2 text-primary">
+                            <i class="fas fa-cog"></i> Información de Control
+                        </legend>
+                        
+                        <dl class="row">
+                            <dt class="col-sm-3">Fecha de Registro:</dt>
+                            <dd class="col-sm-9">
+                                @Model.FechaCreacion.ToString("dddd, dd 'de' MMMM 'de' yyyy 'a las' HH:mm", 
+                                    new System.Globalization.CultureInfo("es-CR"))
+                            </dd>
+
+                            @if (Model.FechaActualizacion.HasValue)
+                            {
+                                <dt class="col-sm-3">Última Actualización:</dt>
+                                <dd class="col-sm-9">
+                                    @Model.FechaActualizacion.Value.ToString("dd/MM/yyyy HH:mm")
+                                </dd>
+                            }
+
+                            @if (Model.FechaResolucion.HasValue)
+                            {
+                                <dt class="col-sm-3">Fecha de Resolución:</dt>
+                                <dd class="col-sm-9">
+                                    @Model.FechaResolucion.Value.ToString("dd/MM/yyyy HH:mm")
+                                </dd>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.Observaciones))
+                            {
+                                <dt class="col-sm-3">Observaciones:</dt>
+                                <dd class="col-sm-9">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            @Model.Observaciones
+                                        </div>
+                                    </div>
+                                </dd>
+                            }
+                        </dl>
+                    </fieldset>
+
+                    <!-- Botones de Acción -->
+                    <div class="text-center">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i>
+                            Volver al Listado
+                        </a>
+
+                        @if (User.IsInRole("Funcionario") || User.IsInRole("Administrador"))
+                        {
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                                <i class="fas fa-edit"></i>
+                                Editar
+                            </a>
+
+                            <a asp-action="CambiarEstado" asp-route-id="@Model.Id" class="btn btn-primary">
+                                <i class="fas fa-exchange-alt"></i>
+                                Cambiar Estado
+                            </a>
+                        }
+
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                                <i class="fas fa-trash"></i>
+                                Eliminar
+                            </a>
+                        }
+                    </div>
+
+                </div>
+            </div>
+
+            @if (User.IsInRole("Funcionario") || User.IsInRole("Administrador"))
+            {
+                <div class="card mt-3 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-lock"></i>
+                            Información de Seguridad - Solo Visible para Personal Autorizado
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">
+                            <strong>Protección de Datos Implementada:</strong>
+                        </p>
+                        <ul class="mb-0">
+                            <li>
+                                <strong>Cifrado:</strong> La cédula, teléfono y email están cifrados en la base de datos 
+                                usando ASP.NET Core Data Protection API con algoritmo AES-256.
+                            </li>
+                            <li>
+                                <strong>Descifrado Controlado:</strong> Solo usuarios autorizados (Funcionarios y Administradores) 
+                                pueden ver los datos descifrados.
+                            </li>
+                            <li>
+                                <strong>Archivo Seguro:</strong> El PDF fue validado con múltiples controles de seguridad 
+                                (tipo MIME, firma del archivo, tamaño máximo).
+                            </li>
+                            <li>
+                                <strong>Cumplimiento Legal:</strong> El sistema cumple con la Ley 8968 de Protección 
+                                de Datos Personales de Costa Rica.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-ocultar alertas después de 5 segundos
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}
