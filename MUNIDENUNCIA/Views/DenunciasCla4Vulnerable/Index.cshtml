@@ -1,0 +1,45 @@
+@model IEnumerable<MUNIDENUNCIA.Models.Denuncia>
+
+@{
+    ViewData["Title"] = "Denuncias - VERSIÓN VULNERABLE";
+}
+
+<div class="container mt-4">
+    <div class="alert alert-danger">
+        <h4><i class="fas fa-exclamation-triangle"></i> ADVERTENCIA: Controlador Vulnerable</h4>
+        <p>Esta es la versión INSEGURA del sistema, solo para demostración pedagógica.</p>
+        <p><strong>Vulnerabilidades activas:</strong> Sin autorización, sin cifrado, sin protección CSRF</p>
+    </div>
+
+    <h2>Lista de Denuncias (Sin Protección)</h2>
+
+    <a asp-action="Create" class="btn btn-success mb-3">Nueva Denuncia</a>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Categoría</th>
+                <th>Ciudadano</th>
+                <th>Cédula (Sin Cifrar)</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Categoria</td>
+                    <td>@item.NombreCompleto</td>
+                    <td class="text-danger">@item.Cedula</td>
+                    <td>@item.Estado</td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Ver</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

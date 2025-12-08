@@ -1,8 +1,6 @@
+Ôªøusing Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using MUNIDENUNCIA.Data;
-using MUNIDENUNCIA.Models;
-using MUNIDENUNCIA.Services;
 using MUNIDENUNCIA.Data;
 using MUNIDENUNCIA.Models;
 using MUNIDENUNCIA.Services;
@@ -62,6 +60,24 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>();
 //Maximo 5 intentos fallidos antes de bloquear cuenta por 15 minutos
 
+// Configurar Data Protection API para cifrado de datos sensibles
+builder.Services.AddDataProtection()
+    .SetApplicationName("MUNIDENUNCIA")  // Nombre √∫nico de la aplicaci√≥n
+    .PersistKeysToFileSystem(new DirectoryInfo(@"./DataProtection-Keys")); // Almacenamiento de claves
+                                                                           // NOTA: En producci√≥n, considerar usar Azure Key Vault o similar
+
+// Registrar servicios personalizados con inyecci√≥n de dependencias
+builder.Services.AddScoped<MUNIDENUNCIA.Services.IDataProtectionService,
+    MUNIDENUNCIA.Services.DataProtectionService>();
+builder.Services.AddScoped<MUNIDENUNCIA.Services.IFileUploadService,
+    MUNIDENUNCIA.Services.FileUploadService>();
+
+// Configurar l√≠mite de tama√±o de archivos subidos (importante para seguridad)
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10MB m√°ximo
+});
+
 //Ajustar cookies de autenticacion
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -78,13 +94,31 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied";
 });
 //HttpOnly previene que scripts de JavaScript accedan a la cookie,
-//protegiendo contra ataques XSS donde un atacante podrÌa inyectar cÛdigo malicioso para robar tokens de sesiÛn.
-//SecurePolicy en Always asegura que la cookie solo se transmita por HTTPS, previniendo intercepciÛn en redes inseguras.
-//SameSite en modo Strict protege contra ataques CSRF al prevenir que la cookie se envÌe en solicitudes cross-site.
+//protegiendo contra ataques XSS donde un atacante podr√≠a inyectar c√≥digo malicioso para robar tokens de sesi√≥n.
+//SecurePolicy en Always asegura que la cookie solo se transmita por HTTPS, previniendo intercepci√≥n en redes inseguras.
+//SameSite en modo Strict protege contra ataques CSRF al prevenir que la cookie se env√≠e en solicitudes cross-site.
 
-//--La expiraciÛn de dos horas con sliding expiration significa que la sesiÛn se renueva autom·ticamente mientras
-//el usuario permanezca activo. Si el usuario deja de interactuar con el sistema, la sesiÛn expirar·
-//despuÈs de dos horas, reduciendo la ventana de oportunidad para que alguien use una sesiÛn abandonada.
+//--La expiraci√≥n de dos horas con sliding expiration significa que la sesi√≥n se renueva autom√°ticamente mientras
+//el usuario permanezca activo. Si el usuario deja de interactuar con el sistema, la sesi√≥n expirar√°
+//despu√©s de dos horas, reduciendo la ventana de oportunidad para que alguien use una sesi√≥n abandonada.
+
+// Configurar pol√≠ticas de autorizaci√≥n personalizadas (opcional, para escenarios avanzados)
+builder.Services.AddAuthorization(options =>
+{
+    // Pol√≠tica que requiere rol de Funcionario o Administrador
+    options.AddPolicy("RequiereFuncionarioOSuperior", policy =>
+        policy.RequireRole("Funcionario", "Administrador"));
+
+    // Pol√≠tica que requiere solo Administrador
+    options.AddPolicy("RequiereAdministrador", policy =>
+        policy.RequireRole("Administrador"));
+
+    // Pol√≠tica personalizada: Puede gestionar denuncias
+    options.AddPolicy("PuedeGestionarDenuncias", policy =>
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("Funcionario") ||
+            context.User.IsInRole("Administrador")));
+});
 
 builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddControllersWithViews();
@@ -104,9 +138,9 @@ builder.Services.AddHttpsRedirection(options =>
     options.RedirectStatusCode = StatusCodes.Status307TemporaryRedirect;
     options.HttpsPort = 5001;
 });
-//RedirectStatusCode = 307: Cuando alguien intenta acceder por HTTP (inseguro), el servidor responde con cÛdigo 307 "Temporal Redirect" redirigiendo autom·ticamente a HTTPS
-//HttpsPort = 5001: Define que el puerto HTTPS es 5001 (en producciÛn serÌa 443)
-//Resultado: Si usuario va a http://localhost:5000, autom·ticamente es redirigido a https://localhost:5001
+//RedirectStatusCode = 307: Cuando alguien intenta acceder por HTTP (inseguro), el servidor responde con c√≥digo 307 "Temporal Redirect" redirigiendo autom√°ticamente a HTTPS
+//HttpsPort = 5001: Define que el puerto HTTPS es 5001 (en producci√≥n ser√≠a 443)
+//Resultado: Si usuario va a http://localhost:5000, autom√°ticamente es redirigido a https://localhost:5001
 
 // Configurar HSTS
 builder.Services.AddHsts(options =>
@@ -116,10 +150,10 @@ builder.Services.AddHsts(options =>
     options.MaxAge = TimeSpan.FromDays(365);
 });
 //**Esto configura: **
-//-**MaxAge = 365 dÌas * *: El navegador recordar· por 1 aÒo que DEBE usar HTTPS siempre
-//- **IncludeSubDomains = true**: Aplica tambiÈn a subdominios (ej: `api.ejemplo.gob.cr`)
+//-**MaxAge = 365 d√≠as * *: El navegador recordar√° por 1 a√±o que DEBE usar HTTPS siempre
+//- **IncludeSubDomains = true**: Aplica tambi√©n a subdominios (ej: `api.ejemplo.gob.cr`)
 //-**Preload = true * *: Permite incluir el sitio en la lista de precarga HSTS de navegadores
-//- **Resultado**: DespuÈs de la primera visita, el navegador NUNCA intentar· conexiÛn HTTP, siempre usar· HTTPS
+//- **Resultado**: Despu√©s de la primera visita, el navegador NUNCA intentar√° conexi√≥n HTTP, siempre usar√° HTTPS
 
 ///
 
@@ -151,13 +185,13 @@ app.Use(async (context, next) =>
     context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
     context.Response.Headers.Add("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
 
-    // Remover headers que revelan informaciÛn
+    // Remover headers que revelan informaci√≥n
     context.Response.Headers.Remove("Server");
     context.Response.Headers.Remove("X-Powered-By");
 
     //o enviar un valor generico en lugar de Kestrel
     //context.Response.Headers.Remove("Server");
-    //context.Response.Headers.Add("Server", "WebServer"); // Valor genÈrico
+    //context.Response.Headers.Add("Server", "WebServer"); // Valor gen√©rico
 
     await next();
 });
@@ -170,8 +204,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 //UseAuthentication debe llamarse antes de UseAuthorization porque primero necesitamos identificar al usuario antes
 //de determinar sus permisos.
-//UseRouting debe preceder a UseAuthentication porque el sistema de autenticaciÛn necesita conocer quÈ endpoint
-//se est· solicitando.
+//UseRouting debe preceder a UseAuthentication porque el sistema de autenticaci√≥n necesita conocer qu√© endpoint
+//se est√° solicitando.
 
 app.MapControllerRoute(
     name: "default",
@@ -180,63 +214,81 @@ app.MapControllerRoute(
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    await SeedRolesAndAdminUser(services);
+
+    try
+    {
+        // Llamar al inicializador de base de datos
+        await MUNIDENUNCIA.Data.DbInitializer.InitializeAsync(services);
+
+        Console.WriteLine("‚úÖ Base de datos inicializada correctamente");
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "‚ùå Error al inicializar la base de datos");
+    }
 }
+
+//using (var scope = app.Services.CreateScope())
+//{
+//    var services = scope.ServiceProvider;
+//    await SeedRolesAndAdminUser(services);
+//}
 
 Log.Information("MUNIDENUNCIA iniciado correctamente");
 
 app.Run();
 
-static async Task SeedRolesAndAdminUser(IServiceProvider serviceProvider)
-{
-    var roleManager = serviceProvider
-        .GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = serviceProvider
-        .GetRequiredService<UserManager<ApplicationUser>>();
-    var logger = serviceProvider
-        .GetRequiredService<ILogger<Program>>();
+//static async Task SeedRolesAndAdminUser(IServiceProvider serviceProvider)
+//{
+//    var roleManager = serviceProvider
+//        .GetRequiredService<RoleManager<IdentityRole>>();
+//    var userManager = serviceProvider
+//        .GetRequiredService<UserManager<ApplicationUser>>();
+//    var logger = serviceProvider
+//        .GetRequiredService<ILogger<Program>>();
 
-    string[] roleNames = {
-        RoleNames.Administrador,
-        RoleNames.Funcionario,
-        RoleNames.Auditor
-    };
+//    string[] roleNames = {
+//        RoleNames.Administrador,
+//        RoleNames.Funcionario,
+//        RoleNames.Auditor
+//    };
 
-    foreach (var roleName in roleNames)
-    {
-        var roleExist = await roleManager.RoleExistsAsync(roleName);
-        if (!roleExist)
-        {
-            await roleManager.CreateAsync(new IdentityRole(roleName));
-            logger.LogInformation("Rol {RoleName} creado", roleName);
-        }
-    }
+//    foreach (var roleName in roleNames)
+//    {
+//        var roleExist = await roleManager.RoleExistsAsync(roleName);
+//        if (!roleExist)
+//        {
+//            await roleManager.CreateAsync(new IdentityRole(roleName));
+//            logger.LogInformation("Rol {RoleName} creado", roleName);
+//        }
+//    }
 
-    var adminEmail = "admin@sumunicipalidad.go.cr";
-    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+//    var adminEmail = "admin@sumunicipalidad.go.cr";
+//    var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
-    if (adminUser == null)
-    {
-        var newAdmin = new ApplicationUser
-        {
-            UserName = adminEmail,
-            Email = adminEmail,
-            EmailConfirmed = true,
-            NombreCompleto = "Administrador del Sistema",
-            Departamento = "TecnologÌas de InformaciÛn",
-            FechaRegistro = DateTime.UtcNow
-        };
+//    if (adminUser == null)
+//    {
+//        var newAdmin = new ApplicationUser
+//        {
+//            UserName = adminEmail,
+//            Email = adminEmail,
+//            EmailConfirmed = true,
+//            NombreCompleto = "Administrador del Sistema",
+//            Departamento = "Tecnolog√≠as de Informaci√≥n",
+//            FechaRegistro = DateTime.UtcNow
+//        };
 
-        var createAdmin = await userManager.CreateAsync(
-            newAdmin,
-            "Admin@MUNIDENUNCIA2025!");
+//        var createAdmin = await userManager.CreateAsync(
+//            newAdmin,
+//            "Admin@MUNIDENUNCIA2025!");
 
-        if (createAdmin.Succeeded)
-        {
-            await userManager.AddToRoleAsync(newAdmin, RoleNames.Administrador);
-            logger.LogInformation("Usuario administrador creado");
-        }
-    }
-}
+//        if (createAdmin.Succeeded)
+//        {
+//            await userManager.AddToRoleAsync(newAdmin, RoleNames.Administrador);
+//            logger.LogInformation("Usuario administrador creado");
+//        }
+//    }
+//}
 
 

@@ -1,0 +1,273 @@
+@model MUNIDENUNCIA.ViewModels.CrearDenunciaViewModel
+
+@{
+    ViewData["Title"] = "Registrar Denuncia Ciudadana";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">
+                        <i class="fas fa-bullhorn"></i>
+                        Registrar Denuncia Ciudadana
+                    </h2>
+                    <p class="mb-0 mt-2">Municipalidad de San José - Sistema de Denuncias</p>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Instrucciones:</strong> Complete todos los campos del formulario.
+                        Los campos marcados con <span class="text-danger">*</span> son obligatorios.
+                        Puede adjuntar un archivo PDF como evidencia (opcional, máximo 5MB).
+                    </div>
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-exclamation-circle"></i>
+                                Por favor corrija los siguientes errores:
+                            </h5>
+                            <hr>
+                            <ul class="mb-0">
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    <!-- Formulario con protección CSRF -->
+                    <form asp-action="Create" method="post" enctype="multipart/form-data">
+
+                        <!-- TOKEN ANTI-CSRF - Generado automáticamente por Razor -->
+                        @Html.AntiForgeryToken()
+
+                        <!-- Información del Ciudadano -->
+                        <fieldset class="border p-3 mb-4">
+                            <legend class="w-auto px-2 text-primary">
+                                <i class="fas fa-user"></i> Información del Ciudadano
+                            </legend>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label asp-for="Cedula" class="font-weight-bold">
+                                        Cédula <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Cedula"
+                                           class="form-control"
+                                           placeholder="1-0234-0567"
+                                           required />
+                                    <small class="form-text text-muted">
+                                        Formato: 1-0234-0567
+                                    </small>
+                                    <span asp-validation-for="Cedula" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group col-md-6">
+                                    <label asp-for="NombreCompleto" class="font-weight-bold">
+                                        Nombre Completo <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="NombreCompleto"
+                                           class="form-control"
+                                           placeholder="Juan Pérez Mora"
+                                           required />
+                                    <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label asp-for="Email" class="font-weight-bold">
+                                        Correo Electrónico <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Email"
+                                           type="email"
+                                           class="form-control"
+                                           placeholder="juan.perez@email.com"
+                                           required />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group col-md-6">
+                                    <label asp-for="Telefono" class="font-weight-bold">
+                                        Teléfono <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Telefono"
+                                           class="form-control"
+                                           placeholder="2222-3333"
+                                           required />
+                                    <small class="form-text text-muted">
+                                        Formato: 2222-3333
+                                    </small>
+                                    <span asp-validation-for="Telefono" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- Información de la Denuncia -->
+                        <fieldset class="border p-3 mb-4">
+                            <legend class="w-auto px-2 text-primary">
+                                <i class="fas fa-file-alt"></i> Información de la Denuncia
+                            </legend>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label asp-for="Categoria" class="font-weight-bold">
+                                        Categoría <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="Categoria"
+                                            class="form-control"
+                                            asp-items="Html.GetEnumSelectList<MUNIDENUNCIA.Models.CategoriaDenuncia>()"
+                                            required>
+                                        <option value="">-- Seleccione una categoría --</option>
+                                    </select>
+                                    <span asp-validation-for="Categoria" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group col-md-6">
+                                    <label asp-for="Ubicacion" class="font-weight-bold">
+                                        Ubicación del Problema <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Ubicacion"
+                                           class="form-control"
+                                           placeholder="Ej: Avenida Central, frente al Parque Nacional"
+                                           required />
+                                    <small class="form-text text-muted">
+                                        Sea lo más específico posible (máximo 200 caracteres)
+                                    </small>
+                                    <span asp-validation-for="Ubicacion" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Descripcion" class="font-weight-bold">
+                                    Descripción Detallada <span class="text-danger">*</span>
+                                </label>
+                                <textarea asp-for="Descripcion"
+                                          class="form-control"
+                                          rows="5"
+                                          placeholder="Describa detalladamente el problema que desea reportar..."
+                                          required></textarea>
+                                <small class="form-text text-muted">
+                                    Mínimo 20 caracteres, máximo 1000 caracteres
+                                </small>
+                                <span asp-validation-for="Descripcion" class="text-danger"></span>
+                            </div>
+                        </fieldset>
+
+                        <!-- Archivo de Evidencia - SEMANA 4 -->
+                        <fieldset class="border p-3 mb-4">
+                            <legend class="w-auto px-2 text-primary">
+                                <i class="fas fa-file-pdf"></i> Evidencia (Opcional)
+                            </legend>
+
+                            <div class="form-group">
+                                <label asp-for="ArchivoPdf" class="font-weight-bold">
+                                    Archivo PDF
+                                </label>
+                                <div class="custom-file">
+                                    <input asp-for="ArchivoPdf"
+                                           type="file"
+                                           class="custom-file-input"
+                                           id="customFile"
+                                           accept=".pdf" />
+                                    <label class="custom-file-label" for="customFile">
+                                        Seleccionar archivo PDF...
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle"></i>
+                                    Solo archivos PDF. Tamaño máximo: 5MB.
+                                    Puede adjuntar fotos del problema, documentos de respaldo, etc.
+                                </small>
+                                <span asp-validation-for="ArchivoPdf" class="text-danger"></span>
+                            </div>
+
+                            <div class="alert alert-warning">
+                                <i class="fas fa-shield-alt"></i>
+                                <strong>Validación de Seguridad:</strong> El archivo será validado para asegurar que:
+                                <ul class="mb-0 mt-2">
+                                    <li>Sea realmente un archivo PDF (no un ejecutable renombrado)</li>
+                                    <li>No exceda el tamaño máximo permitido</li>
+                                    <li>Cumpla con los estándares de seguridad del sistema</li>
+                                </ul>
+                            </div>
+                        </fieldset>
+
+                        <!-- Botones de Acción -->
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane"></i>
+                                Registrar Denuncia
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary btn-lg ml-2">
+                                <i class="fas fa-times"></i>
+                                Cancelar
+                            </a>
+                        </div>
+
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-lock"></i>
+                            <strong>Privacidad:</strong> Su información personal (cédula, teléfono y email)
+                            será <strong>cifrada automáticamente</strong> antes de almacenarse en la base de datos,
+                            garantizando la protección de sus datos según la Ley 8968 de Protección de Datos Personales.
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Mostrar nombre del archivo seleccionado
+        $('.custom-file-input').on('change', function() {
+            var fileName = $(this).val().split('\\').pop();
+            $(this).next('.custom-file-label').html(fileName || 'Seleccionar archivo PDF...');
+        });
+
+        // Validación adicional del lado cliente
+        $('form').on('submit', function(e) {
+            var fileInput = $('#customFile')[0];
+
+            if (fileInput.files.length > 0) {
+                var file = fileInput.files[0];
+                var maxSize = 5 * 1024 * 1024; // 5MB
+
+                // Validar tamaño
+                if (file.size > maxSize) {
+                    e.preventDefault();
+                    alert('El archivo excede el tamaño máximo de 5MB');
+                    return false;
+                }
+
+                // Validar extensión
+                if (!file.name.toLowerCase().endsWith('.pdf')) {
+                    e.preventDefault();
+                    alert('Solo se permiten archivos PDF');
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    </script>
+}
