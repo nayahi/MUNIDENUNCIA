@@ -371,4 +371,4 @@ appsettings.*.json
 !appsettings.Development.json
 
 # O más general, si quieres ignorar todas las librerías que metas ahí
-wwwroot/lib/*
+wwwroot/lib/bootstrap/
