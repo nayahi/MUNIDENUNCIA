@@ -1,0 +1,57 @@
+﻿@{
+    ViewData["Title"] = "Cuenta Bloqueada";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-lock"></i> Cuenta Temporalmente Bloqueada
+                </h4>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-exclamation-triangle fa-5x text-danger"></i>
+                </div>
+
+                <h5 class="card-title">Su cuenta ha sido bloqueada temporalmente</h5>
+
+                <p class="card-text mt-4">
+                    Por motivos de seguridad, su cuenta ha sido bloqueada debido a múltiples
+                    intentos fallidos de inicio de sesión.
+                </p>
+
+                <div class="alert alert-info mt-4">
+                    <h6><i class="fas fa-info-circle"></i> Información</h6>
+                    <p class="mb-0">
+                        El bloqueo se levantará automáticamente en <strong>15 minutos</strong>.<br />
+                        Si no reconoce estos intentos de acceso, por favor contacte al
+                        administrador del sistema de inmediato.
+                    </p>
+                </div>
+
+                <div class="alert alert-warning mt-3">
+                    <small>
+                        <i class="fas fa-shield-alt"></i>
+                        Este evento ha sido registrado en el sistema de auditoría de seguridad.
+                    </small>
+                </div>
+
+                <div class="mt-4">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+                        <i class="fas fa-home"></i> Volver al Inicio
+                    </a>
+                </div>
+
+                <div class="mt-4">
+                    <small class="text-muted">
+                        <strong>Contacto de soporte:</strong><br />
+                        Departamento de Tecnologías de Información<br />
+                        soporte@SUmunicipalidad.go.cr
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

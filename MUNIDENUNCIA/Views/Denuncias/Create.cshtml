@@ -1,0 +1,215 @@
+@model MUNIDENUNCIA.Models.DenunciaCiudadanaModel
+
+@{
+    ViewData["Title"] = "Registrar Denuncia Ciudadana";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Registrar Denuncia Ciudadana
+                    </h2>
+                    <p class="mb-0 mt-2">Municipalidad de San José - Sistema de Denuncias</p>
+                </div>
+
+                <div class="card-body">
+                    
+                    @if (ViewData.ModelState.ErrorCount > 0)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-exclamation-circle"></i>
+                                Se encontraron los siguientes errores:
+                            </h5>
+                            <hr>
+                            <ul class="mb-0">
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Instrucción:</strong> Complete todos los campos del formulario. 
+                        Los campos marcados con <span class="text-danger">*</span> son obligatorios.
+                    </div>
+
+                    <form asp-action="Create" method="post" id="formDenuncia">
+                        
+                        @* VULNERABILIDAD: Falta @Html.AntiForgeryToken() *@
+                        @* TAREA: Agregar token anti-falsificación aquí *@
+
+                        <!-- Información del Ciudadano -->
+                        <fieldset class="border p-3 mb-4">
+                            <legend class="w-auto px-2 text-primary">
+                                <i class="fas fa-user"></i> Información del Ciudadano
+                            </legend>
+                            
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label asp-for="Cedula" class="font-weight-bold">
+                                        Cédula <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Cedula" 
+                                           class="form-control" 
+                                           placeholder="Ej: 123456789"
+                                           required />
+                                    <small class="form-text text-muted">
+                                        9 dígitos numéricos
+                                    </small>
+                                    <span asp-validation-for="Cedula" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group col-md-6">
+                                    <label asp-for="NombreCompleto" class="font-weight-bold">
+                                        Nombre Completo <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="NombreCompleto" 
+                                           class="form-control" 
+                                           placeholder="Ej: Juan Pérez Mora"
+                                           required />
+                                    <small class="form-text text-muted">
+                                        Mínimo 5 caracteres, máximo 100
+                                    </small>
+                                    <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label asp-for="Email" class="font-weight-bold">
+                                        Correo Electrónico <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Email" 
+                                           class="form-control" 
+                                           type="email"
+                                           placeholder="ejemplo@correo.com"
+                                           required />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group col-md-6">
+                                    <label asp-for="Telefono" class="font-weight-bold">
+                                        Teléfono <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Telefono" 
+                                           class="form-control" 
+                                           placeholder="Ej: 88776655"
+                                           required />
+                                    <small class="form-text text-muted">
+                                        8 dígitos (sin guiones ni espacios)
+                                    </small>
+                                    <span asp-validation-for="Telefono" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- Información de la Denuncia -->
+                        <fieldset class="border p-3 mb-4">
+                            <legend class="w-auto px-2 text-primary">
+                                <i class="fas fa-file-alt"></i> Información de la Denuncia
+                            </legend>
+                            
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label asp-for="Categoria" class="font-weight-bold">
+                                        Categoría <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="Categoria" 
+                                            class="form-control"
+                                            asp-items="Html.GetEnumSelectList<CategoriaDenuncia>()"
+                                            required>
+                                        <option value="">-- Seleccione una categoría --</option>
+                                    </select>
+                                    <span asp-validation-for="Categoria" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group col-md-6">
+                                    <label asp-for="Ubicacion" class="font-weight-bold">
+                                        Ubicación <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Ubicacion" 
+                                           class="form-control" 
+                                           placeholder="Ej: Avenida Central, frente al Parque Nacional"
+                                           required />
+                                    <small class="form-text text-muted">
+                                        Describa la ubicación del problema (máximo 200 caracteres)
+                                    </small>
+                                    <span asp-validation-for="Ubicacion" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Descripcion" class="font-weight-bold">
+                                    Descripción del Problema <span class="text-danger">*</span>
+                                </label>
+                                <textarea asp-for="Descripcion" 
+                                          class="form-control" 
+                                          rows="5"
+                                          placeholder="Describa detalladamente el problema que desea reportar..."
+                                          required></textarea>
+                                <small class="form-text text-muted">
+                                    Proporcione una descripción detallada (mínimo 20 caracteres, máximo 1000)
+                                </small>
+                                <span asp-validation-for="Descripcion" class="text-danger"></span>
+                            </div>
+                        </fieldset>
+
+                        <!-- Botones de Acción -->
+                        <div class="form-group text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane"></i> Registrar Denuncia
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary btn-lg ml-2">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-footer bg-light text-muted">
+                    <small>
+                        <i class="fas fa-shield-alt"></i>
+                        Sus datos serán tratados de manera confidencial según la Ley de Protección de Datos (Ley 8968).
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Limpiar espacios en blanco antes de enviar
+            $('#formDenuncia').submit(function() {
+                $('#Cedula, #Telefono').each(function() {
+                    $(this).val($.trim($(this).val()));
+                });
+            });
+        });
+    </script>
+}

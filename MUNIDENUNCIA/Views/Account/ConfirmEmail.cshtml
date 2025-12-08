@@ -1,0 +1,52 @@
+﻿@{
+    ViewData["Title"] = "Confirmación de Correo Electrónico";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-check-circle"></i> Confirmación de Cuenta
+                </h4>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-envelope-open-text fa-5x text-success"></i>
+                </div>
+
+                <h5 class="card-title text-success">
+                    ¡Correo Electrónico Confirmado Exitosamente!
+                </h5>
+
+                <p class="card-text mt-4">
+                    Su cuenta ha sido activada correctamente. Ahora puede iniciar sesión
+                    en el Sistema de Información Municipal utilizando sus credenciales.
+                </p>
+
+                <div class="alert alert-info mt-4">
+                    <h6><i class="fas fa-info-circle"></i> Próximos Pasos</h6>
+                    <ul class="text-start mb-0">
+                        <li>Inicie sesión con su correo electrónico y contraseña</li>
+                        <li>Complete su perfil de funcionario si es necesario</li>
+                        <li>Familiarícese con las funcionalidades disponibles según su rol</li>
+                    </ul>
+                </div>
+
+                <div class="mt-4">
+                    <a asp-controller="Account" asp-action="Login"
+                       class="btn btn-success btn-lg">
+                        <i class="fas fa-sign-in-alt"></i> Ir a Iniciar Sesión
+                    </a>
+                </div>
+
+                <div class="mt-4">
+                    <small class="text-muted">
+                        Sistema de Información Municipal<br />
+                        Su Municipalidad
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

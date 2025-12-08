@@ -1,0 +1,330 @@
+@model MUNIDENUNCIA.Models.SolicitudPermiso
+
+@{
+    ViewData["Title"] = "Detalle de Solicitud";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">
+                        <i class="fas fa-file-alt"></i>
+                        Solicitud de Permiso #@Model.Id
+                    </h2>
+                    <p class="mb-0 mt-2">
+                        Estado: 
+                        <span class="badge badge-light">
+                            @Model.Estado
+                        </span>
+                    </p>
+                </div>
+
+                <div class="card-body">
+                    
+                    @if (TempData["Mensaje"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle"></i> @TempData["Mensaje"]
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+                    
+                    <!-- Información del Propietario -->
+                    <h4 class="text-primary border-bottom pb-2 mb-3">
+                        <i class="fas fa-user"></i> Información del Propietario
+                    </h4>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Cédula:</strong> @Model.CedulaPropietario
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Nombre:</strong> @Model.NombreCompletoPropietario
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <strong>Email:</strong> 
+                            <a href="mailto:@Model.EmailPropietario">@Model.EmailPropietario</a>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Teléfono:</strong> @Model.TelefonoPropietario
+                        </div>
+                    </div>
+
+                    <!-- Información de la Propiedad -->
+                    <h4 class="text-primary border-bottom pb-2 mb-3">
+                        <i class="fas fa-map-marker-alt"></i> Información de la Propiedad
+                    </h4>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Distrito:</strong> @Model.Distrito
+                        </div>
+                        <div class="col-md-8">
+                            <strong>Plano Catastrado:</strong> @Model.PlanoCatastrado
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <strong>Dirección:</strong> @Model.DireccionCompleta
+                        </div>
+                    </div>
+
+                    <!-- Información del Proyecto -->
+                    <h4 class="text-primary border-bottom pb-2 mb-3">
+                        <i class="fas fa-building"></i> Información del Proyecto
+                    </h4>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Tipo:</strong> @Model.TipoConstruccion
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Área:</strong> @Model.AreaConstruccionM2.ToString("N2") m²
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Plantas:</strong> @Model.NumeroPlantas
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <strong>Presupuesto:</strong> 
+                            @Model.PresupuestoEstimado.ToString("C", new System.Globalization.CultureInfo("es-CR"))
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <strong>Descripción del Proyecto:</strong>
+                            <div class="border p-3 mt-2 bg-light" style="white-space: pre-wrap;">
+                                @* 
+                                    ✅ SEGURO: Uso de @ para encoding automático
+                                    Razor automáticamente escapa todos los caracteres HTML/JavaScript
+                                    Si DescripcionProyecto contiene <script>, se mostrará como texto: &lt;script&gt;
+                                    El código malicioso NO se ejecutará
+                                *@
+                                @Model.DescripcionProyecto
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fechas e Información de Control -->
+                    <h4 class="text-primary border-bottom pb-2 mb-3">
+                        <i class="fas fa-calendar"></i> Información de Control
+                    </h4>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Fecha Solicitud:</strong><br>
+                            @Model.FechaSolicitud.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                        <div class="col-md-4">
+                            @if (Model.FechaRevision.HasValue)
+                            {
+                                <strong>Fecha Revisión:</strong><br>
+                                @Model.FechaRevision.Value.ToString("dd/MM/yyyy HH:mm")
+                            }
+                        </div>
+                        <div class="col-md-4">
+                            @if (Model.FechaAprobacion.HasValue)
+                            {
+                                <strong>Fecha Aprobación:</strong><br>
+                                @Model.FechaAprobacion.Value.ToString("dd/MM/yyyy HH:mm")
+                            }
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.RevisadoPor))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <strong>Revisado por:</strong> @Model.RevisadoPor
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Comentarios de Funcionarios -->
+                    @if (Model.Comentarios != null && Model.Comentarios.Any())
+                    {
+                        <h4 class="text-primary border-bottom pb-2 mb-3 mt-4">
+                            <i class="fas fa-comments"></i> Comentarios de Revisión
+                            <span class="badge badge-info">@Model.Comentarios.Count</span>
+                        </h4>
+                        
+                        @foreach (var comentario in Model.Comentarios.OrderBy(c => c.FechaComentario))
+                        {
+                            <div class="card mb-3 @(comentario.EsAprobacion ? "border-success" : comentario.EsRechazo ? "border-danger" : "border-info")">
+                                <div class="card-header @(comentario.EsAprobacion ? "bg-success text-white" : comentario.EsRechazo ? "bg-danger text-white" : "bg-info text-white")">
+                                    <strong>@comentario.NombreFuncionario</strong> - @comentario.CargoFuncionario
+                                    @if (comentario.EsAprobacion)
+                                    {
+                                        <span class="badge badge-light ml-2">APROBACIÓN</span>
+                                    }
+                                    @if (comentario.EsRechazo)
+                                    {
+                                        <span class="badge badge-light ml-2">RECHAZO</span>
+                                    }
+                                    <span class="float-right">
+                                        <i class="fas fa-clock"></i> @comentario.FechaComentario.ToString("dd/MM/yyyy HH:mm")
+                                    </span>
+                                </div>
+                                <div class="card-body" style="white-space: pre-wrap;">
+                                    @* 
+                                        ✅ SEGURO: Encoding automático de Razor con @
+                                        Cualquier código JavaScript en el comentario se mostrará como texto
+                                        NO se ejecutará, previniendo XSS almacenado
+                                    *@
+                                    @comentario.TextoComentario
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mt-4">
+                            <i class="fas fa-info-circle"></i>
+                            No hay comentarios registrados para esta solicitud.
+                        </div>
+                    }
+
+                    <!-- Formulario para Agregar Comentario (Solo Funcionarios) -->
+                    <h4 class="text-primary border-bottom pb-2 mb-3 mt-4">
+                        <i class="fas fa-plus-circle"></i> Agregar Comentario de Revisión
+                    </h4>
+                    
+                    <form asp-controller="Permisos" asp-action="AgregarComentario" method="post">
+                        @* ✅ SEGURO: Protección CSRF con Anti-Forgery Token *@
+                        @Html.AntiForgeryToken()
+                        
+                        <input type="hidden" name="SolicitudPermisoId" value="@Model.Id" />
+                        
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold">
+                                    Nombre del Funcionario <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       name="NombreFuncionario" 
+                                       class="form-control" 
+                                       required 
+                                       maxlength="100"
+                                       placeholder="Nombre completo del funcionario" />
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold">
+                                    Cargo <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       name="CargoFuncionario" 
+                                       class="form-control" 
+                                       required 
+                                       maxlength="50"
+                                       placeholder="Ej: Ingeniero Civil" />
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                Comentario u Observación <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="TextoComentario" 
+                                      class="form-control" 
+                                      rows="4" 
+                                      required 
+                                      minlength="10"
+                                      maxlength="2000"
+                                      placeholder="Ingrese su comentario u observación sobre la solicitud"></textarea>
+                            <small class="form-text text-muted">
+                                ✅ Este campo es sanitizado en el servidor. Caracteres HTML/JavaScript serán escapados automáticamente.
+                            </small>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" 
+                                           name="EsAprobacion" 
+                                           class="form-check-input" 
+                                           id="chkAprobacion" />
+                                    <label class="form-check-label font-weight-bold text-success" for="chkAprobacion">
+                                        <i class="fas fa-check-circle"></i> Marcar como Aprobación
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" 
+                                           name="EsRechazo" 
+                                           class="form-check-input" 
+                                           id="chkRechazo" />
+                                    <label class="form-check-label font-weight-bold text-danger" for="chkRechazo">
+                                        <i class="fas fa-times-circle"></i> Marcar como Rechazo
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-comment"></i> Agregar Comentario
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card-footer bg-light">
+                    <a asp-controller="Permisos" asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver al Listado
+                    </a>
+                    
+                    @if (Model.Estado != EstadoSolicitud.Aprobada && Model.Estado != EstadoSolicitud.Denegada)
+                    {
+                        <a asp-controller="Permisos" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Editar Solicitud
+                        </a>
+                    }
+                    
+                    <button type="button" class="btn btn-info" onclick="window.print()">
+                        <i class="fas fa-print"></i> Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Validación para evitar marcar aprobación y rechazo simultáneamente
+        $(document).ready(function() {
+            $('#chkAprobacion').change(function() {
+                if (this.checked) {
+                    $('#chkRechazo').prop('checked', false);
+                }
+            });
+            
+            $('#chkRechazo').change(function() {
+                if (this.checked) {
+                    $('#chkAprobacion').prop('checked', false);
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,270 @@
+@model MUNIDENUNCIA.ViewModels.SolicitudPermisoValidadoViewModel
+
+@{
+    ViewData["Title"] = "Nueva Solicitud de Permiso";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">
+                        <i class="fas fa-file-alt"></i>
+                        Nueva Solicitud de Permiso de Construcción
+                    </h2>
+                    <p class="mb-0 mt-2">Su Municipalidad - Departamento de Control Urbano</p>
+                </div>
+                
+                <div class="card-body">
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Información Importante:</strong> Todos los campos marcados con <span class="text-danger">*</span> son obligatorios. 
+                        Asegúrese de completar el formulario con información precisa y veraz.
+                    </div>
+
+                    @if (ViewData.ModelState.ErrorCount > 0)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Por favor corrija los siguientes errores:
+                            </h5>
+                            <hr>
+                            <ul class="mb-0">
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    <form asp-action="Create" method="post" id="formularioSolicitud">
+                        @Html.AntiForgeryToken()
+                        
+                        <!-- SECCIÓN 1: INFORMACIÓN DEL PROPIETARIO -->
+                        <fieldset class="border p-3 mb-4">
+                            <legend class="w-auto px-2 text-primary">
+                                <i class="fas fa-user"></i> Información del Propietario
+                            </legend>
+                            
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label asp-for="CedulaPropietario" class="font-weight-bold">
+                                        Cédula <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="CedulaPropietario" 
+                                           class="form-control" 
+                                           placeholder="Ej: 123456789"
+                                           maxlength="10" />
+                                    <small class="form-text text-muted">
+                                        9 dígitos para cédula física, 10 para jurídica
+                                    </small>
+                                    <span asp-validation-for="CedulaPropietario" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group col-md-6">
+                                    <label asp-for="NombreCompletoPropietario" class="font-weight-bold">
+                                        Nombre Completo <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="NombreCompletoPropietario" 
+                                           class="form-control" 
+                                           placeholder="Nombre y apellidos completos" />
+                                    <span asp-validation-for="NombreCompletoPropietario" class="text-danger"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label asp-for="EmailPropietario" class="font-weight-bold">
+                                        Correo Electrónico <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="EmailPropietario" 
+                                           class="form-control" 
+                                           type="email"
+                                           placeholder="correo@ejemplo.com" />
+                                    <span asp-validation-for="EmailPropietario" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group col-md-6">
+                                    <label asp-for="TelefonoPropietario" class="font-weight-bold">
+                                        Teléfono <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="TelefonoPropietario" 
+                                           class="form-control" 
+                                           placeholder="88888888"
+                                           maxlength="8" />
+                                    <small class="form-text text-muted">8 dígitos sin guiones</small>
+                                    <span asp-validation-for="TelefonoPropietario" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- SECCIÓN 2: INFORMACIÓN DE LA PROPIEDAD -->
+                        <fieldset class="border p-3 mb-4">
+                            <legend class="w-auto px-2 text-primary">
+                                <i class="fas fa-map-marker-alt"></i> Información de la Propiedad
+                            </legend>
+                            
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label asp-for="Distrito" class="font-weight-bold">
+                                        Distrito <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="Distrito" class="form-control">
+                                        <option value="">-- Seleccione un distrito --</option>
+                                        <option value="Heredia">Heredia</option>
+                                        <option value="Mercedes">Mercedes</option>
+                                        <option value="San Francisco">San Francisco</option>
+                                        <option value="Ulloa">Ulloa</option>
+                                        <option value="Varablanca">Varablanca</option>
+                                    </select>
+                                    <span asp-validation-for="Distrito" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group col-md-6">
+                                    <label asp-for="PlanoCatastrado" class="font-weight-bold">
+                                        Plano Catastrado <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="PlanoCatastrado" 
+                                           class="form-control" 
+                                           placeholder="Ej: H-1-123456-2023" />
+                                    <small class="form-text text-muted">
+                                        Formato: H-1-######-####
+                                    </small>
+                                    <span asp-validation-for="PlanoCatastrado" class="text-danger"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label asp-for="DireccionCompleta" class="font-weight-bold">
+                                    Dirección Completa <span class="text-danger">*</span>
+                                </label>
+                                <textarea asp-for="DireccionCompleta" 
+                                          class="form-control" 
+                                          rows="3"
+                                          placeholder="Dirección exacta de la propiedad con señas"></textarea>
+                                <span asp-validation-for="DireccionCompleta" class="text-danger"></span>
+                            </div>
+                        </fieldset>
+
+                        <!-- SECCIÓN 3: INFORMACIÓN DEL PROYECTO -->
+                        <fieldset class="border p-3 mb-4">
+                            <legend class="w-auto px-2 text-primary">
+                                <i class="fas fa-building"></i> Información del Proyecto
+                            </legend>
+                            
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label asp-for="TipoConstruccion" class="font-weight-bold">
+                                        Tipo de Construcción <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="TipoConstruccion" 
+                                            class="form-control"
+                                            asp-items="Html.GetEnumSelectList<TipoConstruccion>()">
+                                        <option value="">-- Seleccione tipo --</option>
+                                    </select>
+                                    <span asp-validation-for="TipoConstruccion" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group col-md-3">
+                                    <label asp-for="AreaConstruccionM2" class="font-weight-bold">
+                                        Área (m²) <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="AreaConstruccionM2" 
+                                           class="form-control" 
+                                           type="number"
+                                           step="0.01"
+                                           min="1"
+                                           max="5000" />
+                                    <span asp-validation-for="AreaConstruccionM2" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group col-md-3">
+                                    <label asp-for="NumeroPlantas" class="font-weight-bold">
+                                        Número de Plantas <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="NumeroPlantas" 
+                                           class="form-control" 
+                                           type="number"
+                                           min="1"
+                                           max="10" />
+                                    <span asp-validation-for="NumeroPlantas" class="text-danger"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label asp-for="PresupuestoEstimado" class="font-weight-bold">
+                                    Presupuesto Estimado (₡) <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="PresupuestoEstimado" 
+                                       class="form-control" 
+                                       type="number"
+                                       step="1000"
+                                       min="100000"
+                                       placeholder="En colones" />
+                                <small class="form-text text-muted">
+                                    Mínimo ₡100,000 - Máximo ₡500,000,000
+                                </small>
+                                <span asp-validation-for="PresupuestoEstimado" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label asp-for="DescripcionProyecto" class="font-weight-bold">
+                                    Descripción del Proyecto <span class="text-danger">*</span>
+                                </label>
+                                <textarea asp-for="DescripcionProyecto" 
+                                          class="form-control" 
+                                          rows="5"
+                                          placeholder="Describa detalladamente el proyecto de construcción"></textarea>
+                                <small class="form-text text-muted">
+                                    Mínimo 20 caracteres - Máximo 2000 caracteres
+                                </small>
+                                <span asp-validation-for="DescripcionProyecto" class="text-danger"></span>
+                            </div>
+                        </fieldset>
+
+                        <!-- BOTONES DE ACCIÓN -->
+                        <div class="form-group text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save"></i> Enviar Solicitud
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary btn-lg ml-2">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="alert alert-warning mt-3">
+                <i class="fas fa-clock"></i>
+                <strong>Tiempo de Respuesta:</strong> Las solicitudes son revisadas en un plazo máximo de 15 días hábiles.
+                Recibirá notificaciones por correo electrónico sobre el estado de su solicitud.
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Validación adicional del lado cliente (opcional)
+        // Recordar: la validación del servidor es OBLIGATORIA
+        $(document).ready(function() {
+            $('#formularioSolicitud').submit(function(e) {
+                // Limpiar espacios en blanco antes de enviar
+                $('input[type="text"], textarea').each(function() {
+                    $(this).val($.trim($(this).val()));
+                });
+            });
+        });
+    </script>
+}

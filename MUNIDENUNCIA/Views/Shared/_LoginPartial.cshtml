@@ -1,0 +1,127 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="navbar-nav">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        var user = await UserManager.GetUserAsync(User);
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
+               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-user-circle"></i>
+                @if (user != null && !string.IsNullOrEmpty(user.NombreCompleto))
+                {
+                    <span>@user.NombreCompleto</span>
+                }
+                else
+                {
+                    <span>@User.Identity?.Name</span>
+                }
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                <li>
+                    <a class="dropdown-item" href="#">
+                        <i class="fas fa-user"></i> Mi Perfil
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#">
+                        <i class="fas fa-cog"></i> Configuración
+                    </a>
+                </li>
+                @if (User.IsInRole(RoleNames.Administrador))
+                {
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" asp-controller="Account" asp-action="Register">
+                            <i class="fas fa-user-plus"></i> Registrar Usuario
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-users-cog"></i> Gestión de Usuarios
+                        </a>
+                    </li>
+                }
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form asp-controller="Account" asp-action="Logout" method="post"
+                          id="logoutForm" class="dropdown-item-form">
+                        <button type="submit" class="dropdown-item">
+                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </li>
+
+        @if (user != null)
+        {
+            <li class="nav-item">
+                <span class="nav-link text-muted small">
+                    <i class="fas fa-building"></i> @user.Departamento
+                </span>
+            </li>
+        }
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link" asp-controller="Account" asp-action="Register">
+                <i class="fas fa-user-plus"></i> Registrarse
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" asp-controller="Account" asp-action="Login">
+                <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+            </a>
+        </li>
+    }
+</ul>
+
+<style>
+    .dropdown-item-form {
+        padding: 0;
+        margin: 0;
+    }
+
+        .dropdown-item-form button {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 0.25rem 1rem;
+        }
+
+            .dropdown-item-form button:hover {
+                background-color: #f8f9fa;
+            }
+</style>
+
+@* @using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<ul class="navbar-nav">
+@if (SignInManager.IsSignedIn(User))
+{
+    <li class="nav-item">
+        <a  class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity?.Name!</a>
+    </li>
+    <li class="nav-item">
+        <form  class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+            <button  type="submit" class="nav-link btn btn-link text-dark">Logout</button>
+        </form>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Register</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Login</a>
+    </li>
+}
+</ul> *@

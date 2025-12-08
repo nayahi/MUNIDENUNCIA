@@ -1,0 +1,88 @@
+﻿@model MUNIDENUNCIA.ViewModels.LoginViewModel
+
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sistema de Información Municipal
+                </h4>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center mb-4">
+                    Iniciar Sesión
+                </h5>
+
+                <form asp-action="Login" method="post">
+                    <div asp-validation-summary="All"
+                         class="text-danger mb-3"></div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Email" class="form-label">
+                            Correo Electrónico Institucional
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-envelope"></i>
+                            </span>
+                            <input asp-for="Email" class="form-control"
+                                   placeholder="usuario@municipalidad.go.cr"
+                                   autocomplete="username" />
+                        </div>
+                        <span asp-validation-for="Email"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Password" class="form-label">
+                            Contraseña
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input asp-for="Password" class="form-control"
+                                   type="password"
+                                   autocomplete="current-password" />
+                        </div>
+                        <span asp-validation-for="Password"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input asp-for="RememberMe"
+                               class="form-check-input"
+                               type="checkbox" />
+                        <label asp-for="RememberMe"
+                               class="form-check-label">
+                            Recordar mi sesión
+                        </label>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <small>
+                            <i class="fas fa-info-circle"></i>
+                            Su cuenta será bloqueada después de 5 intentos fallidos.
+                        </small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+@* El tag helper asp-for genera automáticamente los atributos id y name apropiados, 
+   y asp-validation-for muestra mensajes de error del ModelState en el lugar correcto. *@

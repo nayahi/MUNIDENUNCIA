@@ -1,0 +1,130 @@
+@{
+    ViewData["Title"] = "Búsqueda de Denuncias";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">
+                        <i class="fas fa-search"></i>
+                        Búsqueda de Denuncias
+                    </h2>
+                    <p class="mb-0 mt-2">Encuentre denuncias por cédula o categoría</p>
+                </div>
+
+                <div class="card-body">
+                    
+                    @if (ViewBag.Mensaje != null)
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> @ViewBag.Mensaje
+                        </div>
+                    }
+
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> @ViewBag.Error
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    <!-- Búsqueda por Cédula -->
+                    <fieldset class="border p-3 mb-4">
+                        <legend class="w-auto px-2 text-primary">
+                            <i class="fas fa-id-card"></i> Buscar por Cédula del Ciudadano
+                        </legend>
+                        
+                        <form asp-action="BuscarPorCedula" method="post">
+                            <div class="form-row">
+                                <div class="form-group col-md-8">
+                                    <label class="font-weight-bold">Número de Cédula:</label>
+                                    <input type="text" 
+                                           name="cedula" 
+                                           class="form-control" 
+                                           placeholder="Ej: 123456789"
+                                           maxlength="10" />
+                                    <small class="form-text text-muted">
+                                        Ingrese el número de cédula completo (9 dígitos)
+                                    </small>
+                                </div>
+                                <div class="form-group col-md-4 align-self-end">
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fas fa-search"></i> Buscar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </fieldset>
+
+                    <!-- Búsqueda por Categoría -->
+                    <fieldset class="border p-3 mb-4">
+                        <legend class="w-auto px-2 text-primary">
+                            <i class="fas fa-tags"></i> Buscar por Categoría
+                        </legend>
+                        
+                        <form asp-action="BuscarPorCategoria" method="post">
+                            <div class="form-row">
+                                <div class="form-group col-md-8">
+                                    <label class="font-weight-bold">Categoría de Denuncia:</label>
+                                    <select name="categoria" 
+                                            class="form-control"
+                                            asp-items="Html.GetEnumSelectList<CategoriaDenuncia>()">
+                                        <option value="">-- Seleccione una categoría --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-4 align-self-end">
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fas fa-search"></i> Buscar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </fieldset>
+
+                    <!-- Información de Ayuda -->
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-question-circle"></i> Ayuda de Búsqueda
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Búsqueda por Cédula:</strong></p>
+                            <ul>
+                                <li>Ingrese el número de cédula completo del ciudadano (9 dígitos)</li>
+                                <li>El sistema mostrará todas las denuncias registradas por ese ciudadano</li>
+                            </ul>
+                            
+                            <p class="mt-3"><strong>Búsqueda por Categoría:</strong></p>
+                            <ul>
+                                <li>Seleccione una categoría del menú desplegable</li>
+                                <li>El sistema mostrará todas las denuncias de esa categoría</li>
+                            </ul>
+
+                            <div class="alert alert-warning mt-3 mb-0">
+                                <small>
+                                    <i class="fas fa-shield-alt"></i>
+                                    <strong>Nota de Seguridad (Educativa):</strong>
+                                    Este formulario de búsqueda contiene vulnerabilidades intencionales de SQL Injection.
+                                    Los estudiantes deben identificarlas y corregirlas en el controlador.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver al Listado
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

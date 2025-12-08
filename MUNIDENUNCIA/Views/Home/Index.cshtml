@@ -1,0 +1,155 @@
+﻿@{
+    ViewData["Title"] = "Inicio";
+}
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="jumbotron bg-light p-5 rounded">
+                <h1 class="display-4">
+                    <i class="fas fa-building text-primary"></i>
+                    Bienvenido al MUNIDENUNCIA
+                </h1>
+                <p class="lead">
+                    Sistema de Información Municipal de Costa Rica
+                </p>
+                <hr class="my-4" />
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-user"></i> Información del Usuario
+                                </h5>
+                                <ul class="list-unstyled">
+                                    <li>
+                                        <strong>Nombre:</strong> @ViewData["NombreCompleto"]
+                                    </li>
+                                    <li>
+                                        <strong>Correo:</strong> @User.Identity.Name
+                                    </li>
+                                    <li>
+                                        <strong>Departamento:</strong> @ViewData["Departamento"]
+                                    </li>
+                                    <li>
+                                        <strong>Roles:</strong> @ViewData["Roles"]
+                                    </li>
+                                    @if (ViewData["UltimoAcceso"] != null)
+                                    {
+                                        <li>
+                                            <strong>Último acceso:</strong>
+                                            @(((DateTime?)ViewData["UltimoAcceso"])?.ToString("dd/MM/yyyy HH:mm"))
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-tasks"></i> Accesos Rápidos
+                                </h5>
+                                <div class="d-grid gap-2">
+                                    <a href="#" class="btn btn-outline-primary">
+                                        <i class="fas fa-file-alt"></i> Documentos
+                                    </a>
+                                    <a href="#" class="btn btn-outline-primary">
+                                        <i class="fas fa-users"></i> Ciudadanos
+                                    </a>
+                                    <a href="#" class="btn btn-outline-primary">
+                                        <i class="fas fa-chart-bar"></i> Reportes
+                                    </a>
+                                    @if (User.IsInRole("Administrador"))
+                                    {
+                                        <a asp-controller="Account" asp-action="Register"
+                                           class="btn btn-outline-success">
+                                            <i class="fas fa-user-plus"></i> Registrar Usuario
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-shield-alt"></i>
+                    <strong>Sesión Segura:</strong>
+                    Su sesión está protegida con autenticación robusta y cookies seguras.
+                    La sesión expirará después de 2 horas de inactividad.
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <div class="jumbotron bg-light p-5 rounded text-center">
+                <h1 class="display-4">
+                    <i class="fas fa-building text-primary"></i>
+                    Sistema de Información Municipal
+                </h1>
+                <p class="lead">
+                    Su Municipalidad - Costa Rica
+                </p>
+                <hr class="my-4" />
+                <p>
+                    Acceda con sus credenciales institucionales para comenzar.
+                </p>
+
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-lock fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">Seguro</h5>
+                                <p class="card-text">
+                                    Autenticación robusta con protección contra
+                                    accesos no autorizados
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">Colaborativo</h5>
+                                <p class="card-text">
+                                    Múltiples roles para diferentes tipos de
+                                    funcionarios municipales
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-clipboard-check fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">Auditable</h5>
+                                <p class="card-text">
+                                    Registro completo de eventos para cumplimiento
+                                    normativo
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5">
+                    <a asp-controller="Account" asp-action="Login"
+                       class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}

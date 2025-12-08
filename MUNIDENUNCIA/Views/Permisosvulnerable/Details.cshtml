@@ -1,0 +1,233 @@
+@model MUNIDENUNCIA.Models.SolicitudPermiso
+
+@{
+    ViewData["Title"] = "Detalle de Solicitud - VERSIÓN VULNERABLE";
+}
+
+<!-- 
+    ADVERTENCIA: VERSIÓN VULNERABLE - SOLO PARA DEMOSTRACIÓN
+    Esta vista contiene vulnerabilidades intencionales de XSS
+    NO USAR ESTE CÓDIGO EN PRODUCCIÓN
+-->
+
+<div class="container mt-4">
+    
+    <div class="alert alert-danger">
+        <strong>⚠️ VERSIÓN VULNERABLE:</strong> Esta vista usa Html.Raw y es susceptible a ataques XSS.
+        Solo para fines de demostración educativa.
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">
+                        Solicitud de Permiso #@Model.Id
+                    </h2>
+                    <p class="mb-0">Estado: <strong>@Model.Estado</strong></p>
+                </div>
+
+                <div class="card-body">
+                    
+                    <!-- Información del Propietario -->
+                    <h4 class="text-primary border-bottom pb-2 mb-3">
+                        <i class="fas fa-user"></i> Información del Propietario
+                    </h4>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Cédula:</strong> @Model.CedulaPropietario
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Nombre:</strong> @Model.NombreCompletoPropietario
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <strong>Email:</strong> @Model.EmailPropietario
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Teléfono:</strong> @Model.TelefonoPropietario
+                        </div>
+                    </div>
+
+                    <!-- Información de la Propiedad -->
+                    <h4 class="text-primary border-bottom pb-2 mb-3">
+                        <i class="fas fa-map-marker-alt"></i> Información de la Propiedad
+                    </h4>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Distrito:</strong> @Model.Distrito
+                        </div>
+                        <div class="col-md-8">
+                            <strong>Plano Catastrado:</strong> @Model.PlanoCatastrado
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <strong>Dirección:</strong> @Model.DireccionCompleta
+                        </div>
+                    </div>
+
+                    <!-- Información del Proyecto -->
+                    <h4 class="text-primary border-bottom pb-2 mb-3">
+                        <i class="fas fa-building"></i> Información del Proyecto
+                    </h4>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Tipo:</strong> @Model.TipoConstruccion
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Área:</strong> @Model.AreaConstruccionM2 m²
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Plantas:</strong> @Model.NumeroPlantas
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <strong>Presupuesto:</strong> @Model.PresupuestoEstimado.ToString("C", new System.Globalization.CultureInfo("es-CR"))
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <strong>Descripción del Proyecto:</strong>
+                            <div class="border p-3 mt-2 bg-light">
+                                @* 
+                                    ❌ VULNERABILIDAD CRÍTICA DE XSS
+                                    Html.Raw muestra el contenido sin escapar caracteres HTML
+                                    Si DescripcionProyecto contiene JavaScript malicioso, SE EJECUTARÁ
+                                *@
+                                @Html.Raw(Model.DescripcionProyecto)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fechas e Información de Control -->
+                    <h4 class="text-primary border-bottom pb-2 mb-3">
+                        <i class="fas fa-calendar"></i> Información de Control
+                    </h4>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Fecha Solicitud:</strong><br>
+                            @Model.FechaSolicitud.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                        <div class="col-md-4">
+                            @if (Model.FechaRevision.HasValue)
+                            {
+                                <strong>Fecha Revisión:</strong><br>
+                                @Model.FechaRevision.Value.ToString("dd/MM/yyyy HH:mm")
+                            }
+                        </div>
+                        <div class="col-md-4">
+                            @if (Model.FechaAprobacion.HasValue)
+                            {
+                                <strong>Fecha Aprobación:</strong><br>
+                                @Model.FechaAprobacion.Value.ToString("dd/MM/yyyy HH:mm")
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Comentarios de Funcionarios -->
+                    @if (Model.Comentarios != null && Model.Comentarios.Any())
+                    {
+                        <h4 class="text-primary border-bottom pb-2 mb-3 mt-4">
+                            <i class="fas fa-comments"></i> Comentarios de Revisión
+                        </h4>
+                        
+                        @foreach (var comentario in Model.Comentarios.OrderBy(c => c.FechaComentario))
+                        {
+                            <div class="card mb-3 @(comentario.EsAprobacion ? "border-success" : comentario.EsRechazo ? "border-danger" : "border-info")">
+                                <div class="card-header @(comentario.EsAprobacion ? "bg-success text-white" : comentario.EsRechazo ? "bg-danger text-white" : "bg-info text-white")">
+                                    <strong>@comentario.NombreFuncionario</strong> - @comentario.CargoFuncionario
+                                    <span class="float-right">@comentario.FechaComentario.ToString("dd/MM/yyyy HH:mm")</span>
+                                </div>
+                                <div class="card-body">
+                                    @* 
+                                        ❌ VULNERABILIDAD CRÍTICA DE XSS ALMACENADO
+                                        Html.Raw permite que código JavaScript guardado previamente se ejecute
+                                        Un funcionario malicioso o cuenta comprometida puede inyectar scripts
+                                        que afectarán a TODOS los usuarios que vean esta solicitud
+                                    *@
+                                    @Html.Raw(comentario.TextoComentario)
+                                </div>
+                            </div>
+                            <p>vulnerable: @Html.Raw(comentario.TextoComentario)</p>
+                        }
+                    }
+
+                    <!-- Formulario para Agregar Comentario (Solo Funcionarios) -->
+                    <h4 class="text-primary border-bottom pb-2 mb-3 mt-4">
+                        <i class="fas fa-plus-circle"></i> Agregar Comentario
+                    </h4>
+                    
+                    <form asp-controller="PermisosVulnerable" asp-action="AgregarComentario" method="post">
+                        @* ❌ VULNERABILIDAD: Falta @Html.AntiForgeryToken() *@
+                        
+                        <input type="hidden" name="SolicitudPermisoId" value="@Model.Id" />
+                        
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Nombre del Funcionario:</label>
+                                <input type="text" name="NombreFuncionario" class="form-control" required />
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Cargo:</label>
+                                <input type="text" name="CargoFuncionario" class="form-control" required />
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Comentario u Observación:</label>
+                            <textarea name="TextoComentario" class="form-control" rows="4" required></textarea>
+                            <small class="form-text text-danger">
+                                ⚠️ En versión vulnerable: Este campo NO es sanitizado, cualquier HTML/JavaScript se guardará tal cual
+                            </small>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="EsAprobacion" class="form-check-input" id="chkAprobacion" />
+                            <label class="form-check-label" for="chkAprobacion">
+                                Marcar como Aprobación
+                            </label>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="EsRechazo" class="form-check-input" id="chkRechazo" />
+                            <label class="form-check-label" for="chkRechazo">
+                                Marcar como Rechazo
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-comment"></i> Agregar Comentario
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card-footer">
+                    <a asp-controller="PermisosVulnerable" asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver al Listado
+                    </a>
+                    <a asp-controller="PermisosVulnerable" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Script para demostración de conceptos de XSS
+        console.log('Vista vulnerable cargada. Los scripts inyectados en comentarios o descripción se ejecutarán.');
+    </script>
+}

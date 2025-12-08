@@ -1,0 +1,205 @@
+@model MUNIDENUNCIA.Models.Denuncia
+
+@{
+    ViewData["Title"] = "Detalles de Denuncia";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            
+            @* ADVERTENCIA: Esta vista contiene vulnerabilidad XSS intencional *@
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>ADVERTENCIA (Solo para fines educativos):</strong>
+                Esta vista usa Html.Raw que es vulnerable a XSS. Los estudiantes deben corregirlo.
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-0">
+                                <i class="fas fa-file-alt"></i>
+                                Denuncia #@Model.Id
+                            </h2>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            @switch (Model.Estado)
+                            {
+                                case "Pendiente":
+                                    <span class="badge badge-warning badge-lg p-2" style="font-size: 1.1em;">
+                                        <i class="fas fa-clock"></i> Pendiente
+                                    </span>
+                                    break;
+                                case "EnRevision":
+                                    <span class="badge badge-info badge-lg p-2" style="font-size: 1.1em;">
+                                        <i class="fas fa-eye"></i> En Revisión
+                                    </span>
+                                    break;
+                                case "Resuelta":
+                                    <span class="badge badge-success badge-lg p-2" style="font-size: 1.1em;">
+                                        <i class="fas fa-check-circle"></i> Resuelta
+                                    </span>
+                                    break;
+                                case "Cerrada":
+                                    <span class="badge badge-secondary badge-lg p-2" style="font-size: 1.1em;">
+                                        <i class="fas fa-ban"></i> Cerrada
+                                    </span>
+                                    break;
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    
+                    @if (TempData["Mensaje"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle"></i> @TempData["Mensaje"]
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    <!-- Información del Ciudadano -->
+                    <fieldset class="border p-3 mb-4">
+                        <legend class="w-auto px-2 text-primary">
+                            <i class="fas fa-user"></i> Información del Ciudadano
+                        </legend>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <dl class="row">
+                                    <dt class="col-sm-4">Cédula:</dt>
+                                    <dd class="col-sm-8">@Model.Cedula</dd>
+
+                                    <dt class="col-sm-4">Nombre:</dt>
+                                    <dd class="col-sm-8">@Model.NombreCompleto</dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <dl class="row">
+                                    <dt class="col-sm-4">Email:</dt>
+                                    <dd class="col-sm-8">@Model.Email</dd>
+
+                                    <dt class="col-sm-4">Teléfono:</dt>
+                                    <dd class="col-sm-8">@Model.Telefono</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Información de la Denuncia -->
+                    <fieldset class="border p-3 mb-4">
+                        <legend class="w-auto px-2 text-primary">
+                            <i class="fas fa-file-alt"></i> Detalles de la Denuncia
+                        </legend>
+                        
+                        <dl class="row">
+                            <dt class="col-sm-3">Categoría:</dt>
+                            <dd class="col-sm-9">
+                                <span class="badge badge-secondary p-2">
+                                    @Model.Categoria
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-3">Ubicación:</dt>
+                            <dd class="col-sm-9">@Model.Ubicacion</dd>
+
+                            <dt class="col-sm-3">Descripción:</dt>
+                            <dd class="col-sm-9">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        @* VULNERABILIDAD CRÍTICA DE XSS *@
+                                        @* Html.Raw permite que código JavaScript se ejecute *@
+                                        @* TAREA: Reemplazar con @Model.Descripcion para usar encoding automático *@
+                                        @Html.Raw(Model.Descripcion)
+                                    </div>
+                                </div>
+                            </dd>
+
+                            <dt class="col-sm-3">Fecha Registro:</dt>
+                            <dd class="col-sm-9">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                            @if (Model.FechaResolucion.HasValue)
+                            {
+                                <dt class="col-sm-3">Fecha Resolución:</dt>
+                                <dd class="col-sm-9">@Model.FechaResolucion.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.Observaciones))
+                            {
+                                <dt class="col-sm-3">Observaciones:</dt>
+                                <dd class="col-sm-9">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            @* VULNERABILIDAD CRÍTICA DE XSS *@
+                                            @* TAREA: Reemplazar con @Model.Observaciones *@
+                                            @Html.Raw(Model.Observaciones)
+                                        </div>
+                                    </div>
+                                </dd>
+                            }
+                        </dl>
+                    </fieldset>
+
+                    <!-- Sección de Actualización de Estado (solo para funcionarios) -->
+                    @if (Model.Estado != "Resuelta" && Model.Estado != "Cerrada")
+                    {
+                        <fieldset class="border p-3 mb-4 bg-light">
+                            <legend class="w-auto px-2 text-success">
+                                <i class="fas fa-edit"></i> Actualizar Estado (Funcionarios)
+                            </legend>
+                            
+                            <form asp-action="ActualizarEstado" method="post">
+                                @* VULNERABILIDAD: Falta @Html.AntiForgeryToken() *@
+                                @* TAREA: Agregar token anti-falsificación aquí *@
+
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label class="font-weight-bold">Nuevo Estado:</label>
+                                        <select name="nuevoEstado" class="form-control" required>
+                                            <option value="">-- Seleccione --</option>
+                                            <option value="EnRevision">En Revisión</option>
+                                            <option value="Resuelta">Resuelta</option>
+                                            <option value="Cerrada">Cerrada</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="font-weight-bold">Observaciones:</label>
+                                    <textarea name="observaciones" 
+                                              class="form-control" 
+                                              rows="3"
+                                              placeholder="Agregue observaciones sobre el seguimiento de esta denuncia..."></textarea>
+                                    <small class="form-text text-muted">
+                                        Estas observaciones serán visibles para el ciudadano.
+                                    </small>
+                                </div>
+
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save"></i> Actualizar Estado
+                                </button>
+                            </form>
+                        </fieldset>
+                    }
+                </div>
+
+                <div class="card-footer bg-light">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver al Listado
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary ml-2" onclick="window.print()">
+                        <i class="fas fa-print"></i> Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

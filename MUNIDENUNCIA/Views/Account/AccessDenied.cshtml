@@ -1,0 +1,58 @@
+﻿@{
+    ViewData["Title"] = "Acceso Denegado";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Acceso Denegado
+                </h4>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-ban fa-5x text-warning"></i>
+                </div>
+
+                <h5 class="card-title">No Tiene Permisos para Acceder a Este Recurso</h5>
+
+                <p class="card-text mt-4">
+                    Su cuenta de usuario no cuenta con los privilegios necesarios para
+                    acceder a la funcionalidad solicitada.
+                </p>
+
+                <div class="alert alert-info mt-4">
+                    <h6><i class="fas fa-info-circle"></i> ¿Necesita Acceso?</h6>
+                    <p class="mb-0">
+                        Si considera que debería tener acceso a esta funcionalidad,
+                        por favor contacte al administrador del sistema para solicitar
+                        los permisos correspondientes.
+                    </p>
+                </div>
+
+                <div class="alert alert-warning mt-3">
+                    <small>
+                        <i class="fas fa-shield-alt"></i>
+                        Este evento ha sido registrado en el sistema de auditoría de seguridad.
+                    </small>
+                </div>
+
+                <div class="mt-4">
+                    <a asp-controller="Home" asp-action="Index"
+                       class="btn btn-primary">
+                        <i class="fas fa-home"></i> Volver al Inicio
+                    </a>
+                </div>
+
+                <div class="mt-4">
+                    <small class="text-muted">
+                        <strong>Contacto de soporte:</strong><br />
+                        Departamento de Tecnologías de Información<br />
+                        soporte@sumunicipalidad.go.cr<br />
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

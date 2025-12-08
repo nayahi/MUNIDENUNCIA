@@ -1,0 +1,270 @@
+@model MUNIDENUNCIA.ViewModels.BusquedaSolicitudViewModel
+
+@{
+    ViewData["Title"] = "Búsqueda Avanzada de Solicitudes";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">
+                        <i class="fas fa-search"></i>
+                        Búsqueda Avanzada de Solicitudes
+                    </h2>
+                    <p class="mb-0 mt-2">Encuentre solicitudes por múltiples criterios</p>
+                </div>
+
+                <div class="card-body">
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Instrucciones:</strong> Complete uno o más campos de búsqueda. 
+                        Los criterios se combinan para refinar los resultados. Deje en blanco los campos que no desea usar como filtro.
+                    </div>
+
+                    @if (ViewData.ModelState.ErrorCount > 0)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Errores en los criterios de búsqueda:
+                            </h5>
+                            <hr>
+                            <ul class="mb-0">
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> @ViewBag.Error
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    <form asp-action="Buscar" method="post" id="formularioBusqueda">
+                        @Html.AntiForgeryToken()
+                        
+                        <!-- Búsqueda por Información del Propietario -->
+                        <fieldset class="border p-3 mb-4">
+                            <legend class="w-auto px-2 text-primary">
+                                <i class="fas fa-user"></i> Buscar por Propietario
+                            </legend>
+                            
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label asp-for="CedulaBuscada" class="font-weight-bold">
+                                        Cédula del Propietario
+                                    </label>
+                                    <input asp-for="CedulaBuscada" 
+                                           class="form-control" 
+                                           placeholder="Ej: 123456789"
+                                           maxlength="10" />
+                                    <small class="form-text text-muted">
+                                        9 dígitos para cédula física, 10 para jurídica
+                                    </small>
+                                    <span asp-validation-for="CedulaBuscada" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group col-md-6">
+                                    <label asp-for="PlanoCatastrado" class="font-weight-bold">
+                                        Número de Plano Catastrado
+                                    </label>
+                                    <input asp-for="PlanoCatastrado" 
+                                           class="form-control" 
+                                           placeholder="Ej: H-1-123456-2023" />
+                                    <small class="form-text text-muted">
+                                        Formato: H-1-######-####
+                                    </small>
+                                    <span asp-validation-for="PlanoCatastrado" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- Búsqueda por Características del Proyecto -->
+                        <fieldset class="border p-3 mb-4">
+                            <legend class="w-auto px-2 text-primary">
+                                <i class="fas fa-building"></i> Buscar por Tipo y Estado
+                            </legend>
+                            
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label asp-for="TipoConstruccion" class="font-weight-bold">
+                                        Tipo de Construcción
+                                    </label>
+                                    <select asp-for="TipoConstruccion" 
+                                            class="form-control"
+                                            asp-items="Html.GetEnumSelectList<TipoConstruccion>()">
+                                        <option value="">-- Todos los tipos --</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group col-md-6">
+                                    <label asp-for="Estado" class="font-weight-bold">
+                                        Estado de la Solicitud
+                                    </label>
+                                    <select asp-for="Estado" 
+                                            class="form-control"
+                                            asp-items="Html.GetEnumSelectList<EstadoSolicitud>()">
+                                        <option value="">-- Todos los estados --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- Búsqueda por Rango de Fechas -->
+                        <fieldset class="border p-3 mb-4">
+                            <legend class="w-auto px-2 text-primary">
+                                <i class="fas fa-calendar"></i> Buscar por Rango de Fechas
+                            </legend>
+                            
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label asp-for="FechaDesde" class="font-weight-bold">
+                                        Fecha Desde
+                                    </label>
+                                    <input asp-for="FechaDesde" 
+                                           class="form-control" 
+                                           type="date" />
+                                    <span asp-validation-for="FechaDesde" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group col-md-6">
+                                    <label asp-for="FechaHasta" class="font-weight-bold">
+                                        Fecha Hasta
+                                    </label>
+                                    <input asp-for="FechaHasta" 
+                                           class="form-control" 
+                                           type="date" />
+                                    <small class="form-text text-muted">
+                                        La fecha final debe ser mayor o igual a la fecha inicial
+                                    </small>
+                                    <span asp-validation-for="FechaHasta" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- Botones de Acción -->
+                        <div class="form-group text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-search"></i> Buscar Solicitudes
+                            </button>
+                            <button type="reset" class="btn btn-secondary btn-lg ml-2" id="btnLimpiar">
+                                <i class="fas fa-eraser"></i> Limpiar Formulario
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ml-2">
+                                <i class="fas fa-arrow-left"></i> Volver al Listado
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-footer bg-light">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-lightbulb"></i>
+                                <strong>Consejo:</strong> Use la cédula o plano catastrado para búsquedas exactas de solicitudes específicas.
+                            </small>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt"></i>
+                                <strong>Seguridad:</strong> Todas las búsquedas son validadas y protegidas contra SQL Injection.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ejemplos de Búsqueda (Solo para demostración pedagógica) -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-book"></i> Ejemplos de Búsqueda
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>Puede combinar múltiples criterios para búsquedas más específicas:</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Búsquedas Simples:</h6>
+                            <ul class="small">
+                                <li>Por cédula: ingrese solo el número de cédula</li>
+                                <li>Por plano: ingrese el número de plano catastrado</li>
+                                <li>Por tipo: seleccione solo el tipo de construcción</li>
+                                <li>Por estado: seleccione solo el estado deseado</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Búsquedas Combinadas:</h6>
+                            <ul class="small">
+                                <li>Solicitudes pendientes del mes actual: estado "Pendiente" + rango de fechas</li>
+                                <li>Viviendas aprobadas: tipo "Vivienda Unifamiliar" + estado "Aprobada"</li>
+                                <li>Solicitudes de un distrito: requiere modificar consulta (extensión futura)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <small>
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Nota para demostración:</strong> Este formulario está protegido contra SQL Injection. 
+                            Los intentos de inyectar código SQL en los campos serán bloqueados por la validación del lado servidor.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Limpiar formulario completamente
+            $('#btnLimpiar').click(function() {
+                $('select').prop('selectedIndex', 0);
+                $('input[type="date"]').val('');
+            });
+
+            // Validación adicional de rango de fechas en el cliente
+            $('#formularioBusqueda').submit(function(e) {
+                var fechaDesde = $('#FechaDesde').val();
+                var fechaHasta = $('#FechaHasta').val();
+                
+                if (fechaDesde && fechaHasta) {
+                    if (new Date(fechaHasta) < new Date(fechaDesde)) {
+                        e.preventDefault();
+                        alert('La fecha final debe ser mayor o igual a la fecha inicial');
+                        $('#FechaHasta').focus();
+                        return false;
+                    }
+                }
+            });
+
+            // Limpiar espacios en blanco antes de enviar
+            $('#formularioBusqueda').submit(function() {
+                $('#CedulaBuscada, #PlanoCatastrado').each(function() {
+                    $(this).val($.trim($(this).val()));
+                });
+            });
+        });
+    </script>
+}

@@ -1,0 +1,251 @@
+@model IEnumerable<MUNIDENUNCIA.Models.SolicitudPermiso>
+
+@{
+    ViewData["Title"] = "Solicitudes de Permisos de Construcción";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-0">
+                                <i class="fas fa-list-alt"></i>
+                                Solicitudes de Permisos de Construcción
+                            </h2>
+                            <p class="mb-0 mt-2">Su Municipalidad - Departamento de Control Urbano</p>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <a asp-action="Create" class="btn btn-light btn-lg">
+                                <i class="fas fa-plus-circle"></i> Nueva Solicitud
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    
+                    @if (TempData["Mensaje"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle"></i> @TempData["Mensaje"]
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    <!-- Barra de herramientas con búsqueda y filtros -->
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <div class="btn-group" role="group">
+                                <a asp-action="Buscar" class="btn btn-outline-primary">
+                                    <i class="fas fa-search"></i> Búsqueda Avanzada
+                                </a>
+                                <a asp-action="Index" class="btn btn-outline-secondary">
+                                    <i class="fas fa-sync-alt"></i> Recargar
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <span class="badge badge-info badge-pill" style="font-size: 1.1em;">
+                                Total: @Model.Count() solicitudes
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de solicitudes -->
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th style="width: 80px;">ID</th>
+                                        <th>Propietario</th>
+                                        <th>Cédula</th>
+                                        <th>Tipo de Construcción</th>
+                                        <th>Distrito</th>
+                                        <th style="width: 120px;">Fecha</th>
+                                        <th style="width: 150px;">Estado</th>
+                                        <th style="width: 150px;" class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var solicitud in Model)
+                                    {
+                                        <tr>
+                                            <td class="font-weight-bold">#@solicitud.Id</td>
+                                            <td>@solicitud.NombreCompletoPropietario</td>
+                                            <td>@solicitud.CedulaPropietario</td>
+                                            <td>
+                                                <span class="badge badge-secondary">
+                                                    @solicitud.TipoConstruccion
+                                                </span>
+                                            </td>
+                                            <td>@solicitud.Distrito</td>
+                                            <td>
+                                                <small>@solicitud.FechaSolicitud.ToString("dd/MM/yyyy")</small>
+                                            </td>
+                                            <td>
+                                                @switch (solicitud.Estado)
+                                                {
+                                                    case EstadoSolicitud.Pendiente:
+                                                        <span class="badge badge-warning">
+                                                            <i class="fas fa-clock"></i> Pendiente
+                                                        </span>
+                                                        break;
+                                                    case EstadoSolicitud.EnRevision:
+                                                        <span class="badge badge-info">
+                                                            <i class="fas fa-eye"></i> En Revisión
+                                                        </span>
+                                                        break;
+                                                    case EstadoSolicitud.RequiereCorrecciones:
+                                                        <span class="badge badge-warning">
+                                                            <i class="fas fa-exclamation-triangle"></i> Correcciones
+                                                        </span>
+                                                        break;
+                                                    case EstadoSolicitud.Aprobada:
+                                                        <span class="badge badge-success">
+                                                            <i class="fas fa-check-circle"></i> Aprobada
+                                                        </span>
+                                                        break;
+                                                    case EstadoSolicitud.Denegada:
+                                                        <span class="badge badge-danger">
+                                                            <i class="fas fa-times-circle"></i> Denegada
+                                                        </span>
+                                                        break;
+                                                    case EstadoSolicitud.Cancelada:
+                                                        <span class="badge badge-secondary">
+                                                            <i class="fas fa-ban"></i> Cancelada
+                                                        </span>
+                                                        break;
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a asp-action="Details" 
+                                                       asp-route-id="@solicitud.Id" 
+                                                       class="btn btn-info"
+                                                       title="Ver Detalles">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    @if (solicitud.Estado != EstadoSolicitud.Aprobada && 
+                                                         solicitud.Estado != EstadoSolicitud.Denegada)
+                                                    {
+                                                        <a asp-action="Edit" 
+                                                           asp-route-id="@solicitud.Id" 
+                                                           class="btn btn-warning"
+                                                           title="Editar">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Resumen estadístico -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="fas fa-chart-bar"></i> Resumen
+                                        </h5>
+                                        <div class="row text-center">
+                                            <div class="col-md-2">
+                                                <div class="h3 text-warning">
+                                                    @Model.Count(s => s.Estado == EstadoSolicitud.Pendiente)
+                                                </div>
+                                                <small>Pendientes</small>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="h3 text-info">
+                                                    @Model.Count(s => s.Estado == EstadoSolicitud.EnRevision)
+                                                </div>
+                                                <small>En Revisión</small>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="h3 text-warning">
+                                                    @Model.Count(s => s.Estado == EstadoSolicitud.RequiereCorrecciones)
+                                                </div>
+                                                <small>Requieren Correcciones</small>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="h3 text-success">
+                                                    @Model.Count(s => s.Estado == EstadoSolicitud.Aprobada)
+                                                </div>
+                                                <small>Aprobadas</small>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="h3 text-danger">
+                                                    @Model.Count(s => s.Estado == EstadoSolicitud.Denegada)
+                                                </div>
+                                                <small>Denegadas</small>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="h3 text-secondary">
+                                                    @Model.Count(s => s.Estado == EstadoSolicitud.Cancelada)
+                                                </div>
+                                                <small>Canceladas</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info text-center" role="alert">
+                            <i class="fas fa-info-circle fa-3x mb-3"></i>
+                            <h4>No hay solicitudes registradas</h4>
+                            <p class="mb-3">
+                                No existen solicitudes de permisos de construcción en el sistema.
+                            </p>
+                            <a asp-action="Create" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus-circle"></i> Crear Primera Solicitud
+                            </a>
+                        </div>
+                    }
+                </div>
+
+                <div class="card-footer bg-light text-muted">
+                    <small>
+                        <i class="fas fa-info-circle"></i>
+                        Las solicitudes se ordenan por fecha de creación, mostrando las más recientes primero.
+                        Use la Búsqueda Avanzada para filtrar por criterios específicos.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-ocultar mensajes de éxito después de 5 segundos
+        $(document).ready(function() {
+            setTimeout(function() {
+                $('.alert-success').fadeOut('slow');
+            }, 5000);
+        });
+    </script>
+}

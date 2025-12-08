@@ -1,0 +1,245 @@
+@model IEnumerable<MUNIDENUNCIA.Models.SolicitudPermiso>
+
+@{
+    ViewData["Title"] = "Resultados de Búsqueda";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-0">
+                                <i class="fas fa-search-plus"></i>
+                                Resultados de Búsqueda
+                            </h2>
+                            @if (ViewBag.CriterioBusqueda != null)
+                            {
+                                <p class="mb-0 mt-2">
+                                    <small>Criterio: @ViewBag.CriterioBusqueda</small>
+                                </p>
+                            }
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <a asp-action="Buscar" class="btn btn-light">
+                                <i class="fas fa-search"></i> Nueva Búsqueda
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            Se encontraron <strong>@ViewBag.CantidadResultados resultados</strong> que coinciden con sus criterios de búsqueda.
+                        </div>
+
+                        <!-- Tabla de resultados -->
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th style="width: 80px;">ID</th>
+                                        <th>Propietario</th>
+                                        <th>Cédula</th>
+                                        <th>Plano Catastrado</th>
+                                        <th>Tipo</th>
+                                        <th>Distrito</th>
+                                        <th style="width: 120px;">Fecha</th>
+                                        <th style="width: 150px;">Estado</th>
+                                        <th style="width: 100px;" class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var solicitud in Model)
+                                    {
+                                        <tr>
+                                            <td class="font-weight-bold">#@solicitud.Id</td>
+                                            <td>@solicitud.NombreCompletoPropietario</td>
+                                            <td>@solicitud.CedulaPropietario</td>
+                                            <td>
+                                                <small class="text-muted">@solicitud.PlanoCatastrado</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-secondary">
+                                                    @solicitud.TipoConstruccion
+                                                </span>
+                                            </td>
+                                            <td>@solicitud.Distrito</td>
+                                            <td>
+                                                <small>@solicitud.FechaSolicitud.ToString("dd/MM/yyyy")</small>
+                                            </td>
+                                            <td>
+                                                @switch (solicitud.Estado)
+                                                {
+                                                    case EstadoSolicitud.Pendiente:
+                                                        <span class="badge badge-warning">
+                                                            <i class="fas fa-clock"></i> Pendiente
+                                                        </span>
+                                                        break;
+                                                    case EstadoSolicitud.EnRevision:
+                                                        <span class="badge badge-info">
+                                                            <i class="fas fa-eye"></i> En Revisión
+                                                        </span>
+                                                        break;
+                                                    case EstadoSolicitud.RequiereCorrecciones:
+                                                        <span class="badge badge-warning">
+                                                            <i class="fas fa-exclamation-triangle"></i> Correcciones
+                                                        </span>
+                                                        break;
+                                                    case EstadoSolicitud.Aprobada:
+                                                        <span class="badge badge-success">
+                                                            <i class="fas fa-check-circle"></i> Aprobada
+                                                        </span>
+                                                        break;
+                                                    case EstadoSolicitud.Denegada:
+                                                        <span class="badge badge-danger">
+                                                            <i class="fas fa-times-circle"></i> Denegada
+                                                        </span>
+                                                        break;
+                                                    case EstadoSolicitud.Cancelada:
+                                                        <span class="badge badge-secondary">
+                                                            <i class="fas fa-ban"></i> Cancelada
+                                                        </span>
+                                                        break;
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                <a asp-action="Details" 
+                                                   asp-route-id="@solicitud.Id" 
+                                                   class="btn btn-sm btn-info"
+                                                   title="Ver Detalles">
+                                                    <i class="fas fa-eye"></i> Ver
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Resumen de resultados por estado -->
+                        @if (Model.Count() > 1)
+                        {
+                            <div class="row mt-4">
+                                <div class="col-md-12">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="fas fa-chart-pie"></i> Distribución de Resultados por Estado
+                                            </h6>
+                                            <div class="row text-center mt-3">
+                                                @{
+                                                    var porEstado = Model.GroupBy(s => s.Estado)
+                                                        .Select(g => new { Estado = g.Key, Cantidad = g.Count() })
+                                                        .OrderByDescending(x => x.Cantidad);
+                                                }
+
+                                                @foreach (var grupo in porEstado)
+                                                {
+                                                    <div class="col-md-2">
+                                                        <div class="h4 
+                                                            @(grupo.Estado == EstadoSolicitud.Aprobada ? "text-success" : 
+                                                              grupo.Estado == EstadoSolicitud.Denegada ? "text-danger" : 
+                                                              grupo.Estado == EstadoSolicitud.Pendiente ? "text-warning" : "text-info")">
+                                                            @grupo.Cantidad
+                                                        </div>
+                                                        <small>@grupo.Estado</small>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning text-center" role="alert">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                            <h4>No se encontraron resultados</h4>
+                            <p class="mb-3">
+                                No existen solicitudes que coincidan con los criterios de búsqueda especificados.
+                            </p>
+                            <hr>
+                            <p class="mb-0">
+                                <strong>Sugerencias:</strong>
+                            </p>
+                            <ul class="text-left" style="max-width: 600px; margin: 0 auto;">
+                                <li>Verifique que la cédula o plano catastrado estén escritos correctamente</li>
+                                <li>Amplíe el rango de fechas de búsqueda</li>
+                                <li>Utilice menos criterios de filtro para obtener más resultados</li>
+                                <li>Revise que el tipo de construcción y estado seleccionados sean correctos</li>
+                            </ul>
+                            <div class="mt-4">
+                                <a asp-action="Buscar" class="btn btn-warning btn-lg">
+                                    <i class="fas fa-redo"></i> Intentar Nueva Búsqueda
+                                </a>
+                                <a asp-action="Index" class="btn btn-secondary btn-lg ml-2">
+                                    <i class="fas fa-list"></i> Ver Todas las Solicitudes
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="card-footer bg-light">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a asp-action="Buscar" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Modificar Búsqueda
+                            </a>
+                            <a asp-action="Index" class="btn btn-secondary ml-2">
+                                <i class="fas fa-list"></i> Ver Todas
+                            </a>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            @if (Model != null && Model.Any())
+                            {
+                                <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+                                    <i class="fas fa-print"></i> Imprimir Resultados
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información adicional para demostración -->
+            @if (Model != null && Model.Any())
+            {
+                <div class="card mt-3 border-info">
+                    <div class="card-body">
+                        <h6 class="text-info">
+                            <i class="fas fa-info-circle"></i> Información Técnica (Solo para demostración)
+                        </h6>
+                        <small class="text-muted">
+                            Esta búsqueda utilizó consultas parametrizadas con LINQ to Entities, 
+                            garantizando protección completa contra SQL Injection. Los parámetros fueron 
+                            validados en el servidor antes de ejecutar la consulta.
+                        </small>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Resaltar resultados al cargar
+        $(document).ready(function() {
+            $('tr').hover(
+                function() { $(this).addClass('table-active'); },
+                function() { $(this).removeClass('table-active'); }
+            );
+        });
+    </script>
+}
