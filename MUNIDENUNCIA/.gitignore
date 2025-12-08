@@ -369,3 +369,6 @@ appsettings.Secrets.json
 appsettings.*.json
 !appsettings.json          # permite el que sí quieres subir
 !appsettings.Development.json
+
+# O más general, si quieres ignorar todas las librerías que metas ahí
+wwwroot/lib/*
