@@ -362,4 +362,10 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
+# Claves secretas - NUNCA subir
 appsettings.Secrets.json
+.env
+*.env
+appsettings.*.json
+!appsettings.json          # permite el que sí quieres subir
+!appsettings.Development.json
