@@ -62,6 +62,12 @@ namespace MUNIDENUNCIA.Controllers
         /// 
         public async Task<IActionResult> Index()
         {
+            var userName = User.Identity?.Name ?? "Desconocido";
+
+            _logger.LogInformation(
+        "Usuario {UserName} accedió a la lista de denuncias",
+        userName);
+
             var denuncias = await _context.Denuncias
                 //.Include(d => d.AsignadoAUserId)
                 .OrderByDescending(d => d.FechaCreacion)
@@ -153,6 +159,11 @@ namespace MUNIDENUNCIA.Controllers
             // ✅ VERIFICAR AUTORIZACIÓN para ver detalles
             if (!PuedeAccederADenuncia(denuncia))
             {
+                // ¡LOGGING DE SEGURIDAD CRÍTICO!
+                _logger.LogWarning(
+                    "INTENTO DE ACCESO NO AUTORIZADO: Ciudadano {UserName} intentó acceder a denuncia ID: {DenunciaId}",
+                    User.Identity?.Name ?? "Desconocido",
+                    id);
                 return Forbid(); // 403 Forbidden
             }
 
@@ -227,6 +238,13 @@ namespace MUNIDENUNCIA.Controllers
 
                 _context.Denuncias.Add(denuncia);
                 await _context.SaveChangesAsync();
+
+                _logger.LogInformation(
+    //"DENUNCIA CREADA: ID: {DenunciaId}, Usuario: {UserName}, Tipo: {TipoDenuncia}",
+    "DENUNCIA CREADA: ID: {DenunciaId}, Usuario: {UserName}",
+    denuncia.Id,
+    User.Identity?.Name ?? "Desconocido"/*,
+    denuncia.TipoDenuncia*/);
 
                 TempData["Mensaje"] = "Denuncia registrada exitosamente. " +
                     "En breve un funcionario revisará su caso.";
