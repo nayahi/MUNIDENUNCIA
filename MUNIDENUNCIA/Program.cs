@@ -1,11 +1,36 @@
 ﻿using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Win32;
 using MUNIDENUNCIA.Data;
 using MUNIDENUNCIA.Models;
 using MUNIDENUNCIA.Services;
 using Serilog;
 using Serilog.Events;
+
+
+// Configurar Serilog ANTES de crear el builder
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft.AspNetCore", (LogEventLevel)LogLevel.Warning)
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .Enrich.WithEnvironmentName()
+    .WriteTo.Console(outputTemplate:
+        "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File(
+        "logs/security-.txt",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30
+    )
+    .CreateLogger();
+
+//- .MinimumLevel.Information(): Registrar eventos Info, Warning y Error (no Debug)
+//- .Enrich.WithMachineName(): Agregar nombre del servidor a cada log
+//- .WriteTo.Console(): Mostrar en consola durante desarrollo
+//- .WriteTo.File(): Guardar en archivos para producción
+//- rollingInterval: RollingInterval.Day: Nuevo archivo cada día
+//- retainedFileCountLimit: 30: Mantener últimos 30 días
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,16 +41,6 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 });
 
 //Ajustar bitacorizacion
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .MinimumLevel.Override("Microsoft.AspNetCore", (LogEventLevel)LogLevel.Warning)
-    .WriteTo.Console(outputTemplate:
-        "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
-    .WriteTo.File("logs/security-.txt",
-        rollingInterval: RollingInterval.Day,
-        restrictedToMinimumLevel: LogEventLevel.Information)
-    .Enrich.FromLogContext()
-    .CreateLogger();
 builder.Host.UseSerilog();
 
 //Ajustar db
