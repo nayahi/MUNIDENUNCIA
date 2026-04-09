@@ -136,6 +136,22 @@ namespace MUNIDENUNCIA.Controllers
         {
             try
             {
+                // ❌ PELIGRO CRÍTICO: Borrado de tablas
+                // Si model.PlanoCatastrado contiene: ; DROP TABLE dbo.SolicitudPruebas; --
+                // Se borrar la tabla ; DROP TABLE dbo.SolicitudPruebas;
+                if (!string.IsNullOrEmpty(model.PlanoCatastrado))
+                {
+                    // ❌ Otra consulta vulnerable con concatenación
+                    var sql = $"SELECT * FROM SolicitudesPermisos WHERE PlanoCatastrado = '{model.PlanoCatastrado}'";
+
+                    var resultados = await _context.SolicitudesPermisos
+                        .FromSqlRaw(sql)
+                        .ToListAsync();
+
+                    ViewBag.CriterioBusqueda = $"Plano: {model.PlanoCatastrado}";
+                    return View("ResultadosBusqueda", resultados);
+                }
+
                 // ❌ PELIGRO CRÍTICO: Concatenación directa de SQL
                 // Si model.CedulaBuscada contiene: ' OR '1'='1' --
                 // La consulta retornará TODAS las solicitudes
@@ -150,19 +166,6 @@ namespace MUNIDENUNCIA.Controllers
                         .ToListAsync();
 
                     ViewBag.CriterioBusqueda = $"Cédula: {model.CedulaBuscada}";
-                    return View("ResultadosBusqueda", resultados);
-                }
-
-                if (!string.IsNullOrEmpty(model.PlanoCatastrado))
-                {
-                    // ❌ Otra consulta vulnerable con concatenación
-                    var sql = $"SELECT * FROM SolicitudesPermisos WHERE PlanoCatastrado = '{model.PlanoCatastrado}'";
-
-                    var resultados = await _context.SolicitudesPermisos
-                        .FromSqlRaw(sql)
-                        .ToListAsync();
-
-                    ViewBag.CriterioBusqueda = $"Plano: {model.PlanoCatastrado}";
                     return View("ResultadosBusqueda", resultados);
                 }
 
