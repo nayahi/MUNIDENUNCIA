@@ -36,10 +36,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Configurar Kestrel para NO enviar header Server
 //Comentar para ejemplo
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    serverOptions.AddServerHeader = false;
-});
+//builder.WebHost.ConfigureKestrel(serverOptions =>
+//{
+//    serverOptions.AddServerHeader = false;
+//});
 
 //Ajustar bitacorizacion
 builder.Host.UseSerilog();
@@ -182,35 +182,35 @@ if (!app.Environment.IsDevelopment())
 }
 
 // Middleware de headers de seguridad //Descomentar este codigo para revisar como falla el XSS en paginas vulnerables.
-app.Use(async (context, next) =>
-{
-    //context.Response.Headers.Add("Content-Security-Policy",
-    //    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:");
+//app.Use(async (context, next) =>
+//{
+//    //context.Response.Headers.Add("Content-Security-Policy",
+//    //    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:");
 
-    context.Response.Headers.Add("Content-Security-Policy",
-            "default-src 'self'; " +
-            "script-src 'self'; " +  // NO 'unsafe-inline' - bloquea scripts inyectados
-            "style-src 'self'; " +
-            "object-src 'none'; " +   // Bloquea Flash, Java, etc.
-            "base-uri 'self'; " +     // Previene ataques de base tag
-            "frame-ancestors 'none'"); // Previene clickjacking
+//    context.Response.Headers.Add("Content-Security-Policy",
+//            "default-src 'self'; " +
+//            "script-src 'self'; " +  // NO 'unsafe-inline' - bloquea scripts inyectados
+//            "style-src 'self'; " +
+//            "object-src 'none'; " +   // Bloquea Flash, Java, etc.
+//            "base-uri 'self'; " +     // Previene ataques de base tag
+//            "frame-ancestors 'none'"); // Previene clickjacking
 
 
-    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
-    context.Response.Headers.Add("X-Frame-Options", "DENY");
-    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
-    context.Response.Headers.Add("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+//    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+//    context.Response.Headers.Add("X-Frame-Options", "DENY");
+//    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+//    context.Response.Headers.Add("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
 
-    // Remover headers que revelan información
-    context.Response.Headers.Remove("Server");
-    context.Response.Headers.Remove("X-Powered-By");
+//    // Remover headers que revelan información
+//    context.Response.Headers.Remove("Server");
+//    context.Response.Headers.Remove("X-Powered-By");
 
-    //o enviar un valor generico en lugar de Kestrel
-    //context.Response.Headers.Remove("Server");
-    //context.Response.Headers.Add("Server", "WebServer"); // Valor genérico
+//    //o enviar un valor generico en lugar de Kestrel
+//    //context.Response.Headers.Remove("Server");
+//    //context.Response.Headers.Add("Server", "WebServer"); // Valor genérico
 
-    await next();
-});
+//    await next();
+//});
 
 
 app.UseHttpsRedirection();
