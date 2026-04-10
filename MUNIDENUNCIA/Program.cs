@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using MUNIDENUNCIA.Data;
@@ -36,10 +37,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Configurar Kestrel para NO enviar header Server
 //Comentar para ejemplo
-//builder.WebHost.ConfigureKestrel(serverOptions =>
-//{
-//    serverOptions.AddServerHeader = false;
-//});
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.AddServerHeader = false;
+});
 
 //Ajustar bitacorizacion
 builder.Host.UseSerilog();
@@ -139,6 +140,68 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddControllersWithViews();
 
+// HttpClient genérico (usado por SsrfVulnerableController para la demo)
+builder.Services.AddHttpClient();
+
+// HttpClient seguro con restricciones (usado por SsrfSeguroController)
+builder.Services.AddHttpClient("SsrfSeguro", client =>
+{
+    // ✅ Timeout restrictivo: 5 segundos máximo
+    client.Timeout = TimeSpan.FromSeconds(5);
+
+    // ✅ Limitar tamaño de respuesta: 1 MB máximo
+    client.MaxResponseContentBufferSize = 1_048_576;
+
+    // ✅ User-Agent identificable para auditoría
+    client.DefaultRequestHeaders.UserAgent.ParseAdd(
+        "MuniDenuncia-HealthCheck/1.0 (+https://munidenuncia.go.cr)");
+
+    // ✅ No seguir redirecciones automáticamente (previene SSRF por redirect)
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    AllowAutoRedirect = false,             // ← Previene SSRF por cadena de redirects
+    MaxAutomaticRedirections = 0
+});
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AGREGAR DESPUÉS DEL BLOQUE ANTERIOR (OPCIONAL):
+// Bloque 2: Rate Limiting básico para demo de A07 (Fallas de Autenticación)
+// ─────────────────────────────────────────────────────────────────────────────
+
+builder.Services.AddRateLimiter(options =>
+{
+    // Limitar intentos de login: máximo 5 peticiones por minuto por IP
+    options.AddFixedWindowLimiter("login", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 5;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0; // Sin cola — rechazar inmediatamente
+    });
+
+    // Limitar peticiones generales: 100 por minuto por IP
+    options.AddFixedWindowLimiter("general", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 100;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueLimit = 0;
+    });
+
+    // Respuesta cuando se excede el límite
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsJsonAsync(new
+        {
+            error = "Demasiadas solicitudes. Intente nuevamente en un minuto.",
+            retryAfter = 60
+        }, cancellationToken);
+    };
+});
+
 /////////
 builder.Services.AddSession(options =>
 {
@@ -182,35 +245,35 @@ if (!app.Environment.IsDevelopment())
 }
 
 // Middleware de headers de seguridad //Descomentar este codigo para revisar como falla el XSS en paginas vulnerables.
-//app.Use(async (context, next) =>
-//{
-//    //context.Response.Headers.Add("Content-Security-Policy",
-//    //    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:");
+app.Use(async (context, next) =>
+{
+    //context.Response.Headers.Add("Content-Security-Policy",
+    //    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:");
 
-//    context.Response.Headers.Add("Content-Security-Policy",
-//            "default-src 'self'; " +
-//            "script-src 'self'; " +  // NO 'unsafe-inline' - bloquea scripts inyectados
-//            "style-src 'self'; " +
-//            "object-src 'none'; " +   // Bloquea Flash, Java, etc.
-//            "base-uri 'self'; " +     // Previene ataques de base tag
-//            "frame-ancestors 'none'"); // Previene clickjacking
+    context.Response.Headers.Add("Content-Security-Policy",
+            "default-src 'self'; " +
+            "script-src 'self'; " +  // NO 'unsafe-inline' - bloquea scripts inyectados
+            "style-src 'self'; " +
+            "object-src 'none'; " +   // Bloquea Flash, Java, etc.
+            "base-uri 'self'; " +     // Previene ataques de base tag
+            "frame-ancestors 'none'"); // Previene clickjacking
 
 
-//    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
-//    context.Response.Headers.Add("X-Frame-Options", "DENY");
-//    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
-//    context.Response.Headers.Add("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Add("X-Frame-Options", "DENY");
+    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.Add("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
 
-//    // Remover headers que revelan información
-//    context.Response.Headers.Remove("Server");
-//    context.Response.Headers.Remove("X-Powered-By");
+    // Remover headers que revelan información
+    context.Response.Headers.Remove("Server");
+    context.Response.Headers.Remove("X-Powered-By");
 
-//    //o enviar un valor generico en lugar de Kestrel
-//    //context.Response.Headers.Remove("Server");
-//    //context.Response.Headers.Add("Server", "WebServer"); // Valor genérico
+    //o enviar un valor generico en lugar de Kestrel
+    //context.Response.Headers.Remove("Server");
+    //context.Response.Headers.Add("Server", "WebServer"); // Valor genérico
 
-//    await next();
-//});
+    await next();
+});
 
 
 app.UseHttpsRedirection();
@@ -218,6 +281,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter(); 
 //UseAuthentication debe llamarse antes de UseAuthorization porque primero necesitamos identificar al usuario antes
 //de determinar sus permisos.
 //UseRouting debe preceder a UseAuthentication porque el sistema de autenticación necesita conocer qué endpoint

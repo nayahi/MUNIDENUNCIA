@@ -1,0 +1,94 @@
+@*
+    Views/IntegridadSeguro/Index.cshtml
+    Página principal del demo de Integridad Segura (A08)
+*@
+
+@{
+    ViewData["Title"] = "Integridad Segura - Deserialización Protegida (A08)";
+}
+
+<div class="container mt-4">
+    <div class="alert alert-success">
+        <h4><i class="bi bi-shield-check"></i> VERSIÓN SEGURA — Deserialización controlada</h4>
+        <p class="mb-0">Estos endpoints demuestran las defensas contra fallas de integridad de datos.</p>
+    </div>
+
+    <h2>Demo A08: Integridad de Datos (Seguro)</h2>
+    <hr />
+
+    <!-- Defensa 1: Deserialización tipada -->
+    <div class="card mb-3 border-success">
+        <div class="card-header bg-success text-white">
+            Defensa 1: Deserialización con Modelo Tipado (System.Text.Json)
+        </div>
+        <div class="card-body">
+            <p>Solo acepta los campos definidos en <code>ConfiguracionUsuarioDto</code>.
+               Campos desconocidos son <strong>ignorados automáticamente</strong>.</p>
+            <pre class="bg-dark text-white p-2 rounded"><code>// Modelo con validación:
+public class ConfiguracionUsuarioDto
+{
+    [Required]
+    [RegularExpression("^(claro|oscuro)$")]
+    public string Tema { get; set; }
+
+    [Required]
+    [RegularExpression("^(es|en)$")]
+    public string Idioma { get; set; }
+
+    [Range(10, 100)]
+    public int RegistrosPorPagina { get; set; }
+}</code></pre>
+            <p class="text-muted small">Envíe JSON con campos extra a <code>POST /IntegridadSeguro/importar-configuracion</code> — serán descartados.</p>
+        </div>
+    </div>
+
+    <!-- Defensa 2: Verificación de integridad -->
+    <div class="card mb-3 border-success">
+        <div class="card-header bg-success text-white">
+            Defensa 2: Actualización con Verificación SHA-256
+        </div>
+        <div class="card-body">
+            <p>Antes de aplicar una actualización, se verifica:</p>
+            <ol>
+                <li>URL proviene de dominio confiable (whitelist)</li>
+                <li>Esquema es HTTPS</li>
+                <li>Hash SHA-256 del contenido coincide con el esperado</li>
+                <li>Comparación de hash en tiempo constante (anti timing-attack)</li>
+            </ol>
+            <p class="text-muted small">Envíe JSON a <code>POST /IntegridadSeguro/aplicar-actualizacion</code> con <code>url</code> y <code>hashEsperado</code>.</p>
+        </div>
+    </div>
+
+    <div class="card bg-dark text-white mb-3">
+        <div class="card-header">Resumen de Defensas A08</div>
+        <div class="card-body">
+            <table class="table table-dark table-sm mb-0">
+                <thead><tr><th>Amenaza</th><th>Defensa en MuniDenuncia</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td>BinaryFormatter (RCE)</td>
+                        <td>Bloqueado en .NET 8. Usar solo System.Text.Json con DTOs tipados.</td>
+                    </tr>
+                    <tr>
+                        <td>JSON con campos inyectados</td>
+                        <td>Modelo fuertemente tipado + Data Annotations + System.Text.Json</td>
+                    </tr>
+                    <tr>
+                        <td>Actualización MITM</td>
+                        <td>Whitelist de dominios + HTTPS + verificación SHA-256</td>
+                    </tr>
+                    <tr>
+                        <td>Newtonsoft TypeNameHandling</td>
+                        <td>No usar Newtonsoft. System.Text.Json no soporta $type por diseño.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-controller="IntegridadVulnerable" asp-action="Index" class="btn btn-outline-danger">
+            <i class="bi bi-exclamation-triangle"></i> Ver Versión Vulnerable
+        </a>
+    </div>
+</div>

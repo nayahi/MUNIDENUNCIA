@@ -1,0 +1,60 @@
+@*
+    ResultadoImportacion.cshtml
+    Vista compartida para IntegridadVulnerableController e IntegridadSeguroController
+    Ubicación: Views/Shared/ResultadoImportacion.cshtml
+    (o bien Views/IntegridadVulnerable/ y Views/IntegridadSeguro/)
+*@
+
+@{
+    ViewData["Title"] = "Resultado - Demo Integridad de Datos (A08)";
+    var resultado = ViewBag.Resultado as string ?? "DESCONOCIDO";
+    var mensaje = ViewBag.Mensaje as string ?? "";
+    var datos = ViewBag.Datos as string ?? "";
+
+    var esSeguro = resultado.Contains("SEGURO") || resultado.Contains("VERIFICADO_OK");
+    var esFallido = resultado.Contains("RECHAZADO") || resultado.Contains("FALLIDA")
+                    || resultado.Contains("ERROR");
+}
+
+<div class="container mt-4">
+    <h2>
+        <i class="bi @(esSeguro ? "bi-shield-check text-success" : esFallido ? "bi-shield-x text-danger" : "bi-exclamation-triangle text-warning")"></i>
+        Demo A08: Integridad de Datos
+    </h2>
+    <hr />
+
+    <div class="alert @(esSeguro ? "alert-success" : esFallido ? "alert-danger" : "alert-warning")">
+        <strong>Resultado:</strong> @resultado
+    </div>
+
+    @if (!string.IsNullOrEmpty(mensaje))
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Detalle</h5>
+                <p class="card-text">@mensaje</p>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(datos))
+    {
+        <div class="card mb-3">
+            <div class="card-header bg-dark text-white">
+                <i class="bi bi-code-slash"></i> Datos procesados
+            </div>
+            <div class="card-body">
+                <pre class="mb-0"><code>@datos</code></pre>
+            </div>
+        </div>
+    }
+
+    <div class="mt-3">
+        <a asp-controller="IntegridadVulnerable" asp-action="Index" class="btn btn-outline-danger me-2">
+            Versión Vulnerable
+        </a>
+        <a asp-controller="IntegridadSeguro" asp-action="Index" class="btn btn-outline-success">
+            Versión Segura
+        </a>
+    </div>
+</div>
