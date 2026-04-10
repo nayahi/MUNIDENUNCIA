@@ -1,0 +1,76 @@
+@*
+    Views/SsrfSeguro/Index.cshtml
+    Página principal del demo SSRF seguro (A10)
+*@
+
+@{
+    ViewData["Title"] = "SSRF Seguro - Vista Previa de Enlace (A10)";
+    var servicios = ViewBag.ServiciosPermitidos as Dictionary<string, string>
+        ?? new Dictionary<string, string>();
+}
+
+<div class="container mt-4">
+    <div class="alert alert-success">
+        <h4><i class="bi bi-shield-check"></i> VERSIÓN SEGURA — Whitelist de dominios</h4>
+        <p class="mb-0">Este endpoint <strong>solo permite</strong> peticiones a servicios autorizados vía HTTPS.</p>
+    </div>
+
+    <h2>Vista Previa de Enlace (Protegida)</h2>
+    <p>Ingrese una URL de un servicio autorizado:</p>
+
+    <form method="get" asp-action="VistaPrevia" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="url" class="form-control"
+                   placeholder="https://gee.bccr.fi.cr/..." />
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-search"></i> Verificar Servicio
+            </button>
+        </div>
+    </form>
+
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <i class="bi bi-list-check"></i> Servicios Autorizados (Whitelist)
+        </div>
+        <div class="card-body">
+            <table class="table table-sm table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Dominio</th>
+                        <th>Servicio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var servicio in servicios)
+                    {
+                        <tr>
+                            <td><code>@servicio.Key</code></td>
+                            <td>@servicio.Value</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card bg-dark text-white">
+        <div class="card-header">Defensas implementadas</div>
+        <div class="card-body">
+            <ol class="mb-0 small">
+                <li>Whitelist de dominios — solo servicios CR aprobados</li>
+                <li>Solo esquema HTTPS — bloquea http://, file://, ftp://</li>
+                <li>Resolución DNS + bloqueo de IPs privadas (anti DNS-rebinding)</li>
+                <li>Timeout restrictivo (5 segundos)</li>
+                <li>Sin redirecciones automáticas</li>
+                <li>Límite de tamaño de respuesta (1 MB)</li>
+                <li>Mensajes de error genéricos (sin fuga de información de red)</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-controller="SsrfVulnerable" asp-action="Index" class="btn btn-outline-danger">
+            <i class="bi bi-exclamation-triangle"></i> Ver Versión Vulnerable
+        </a>
+    </div>
+</div>

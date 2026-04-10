@@ -1,0 +1,77 @@
+@*
+    Views/IntegridadVulnerable/Index.cshtml
+    Página principal del demo de Integridad Vulnerable (A08)
+*@
+
+@{
+    ViewData["Title"] = "Integridad Vulnerable - Deserialización Insegura (A08)";
+}
+
+<div class="container mt-4">
+    <div class="alert alert-danger">
+        <h4><i class="bi bi-exclamation-triangle-fill"></i> VERSIÓN VULNERABLE — Solo para demostración</h4>
+        <p class="mb-0">Estos endpoints demuestran fallas de integridad de datos (deserialización insegura, falta de verificación).</p>
+    </div>
+
+    <h2>Demo A08: Fallas en la Integridad de Datos</h2>
+    <hr />
+
+    <!-- Demo 1: BinaryFormatter -->
+    <div class="card mb-3 border-danger">
+        <div class="card-header bg-danger text-white">
+            Demo 1: Deserialización Binaria (BinaryFormatter)
+        </div>
+        <div class="card-body">
+            <p>BinaryFormatter permite <strong>ejecución remota de código</strong> durante la deserialización.
+               En .NET 8 está bloqueado por defecto, pero en versiones anteriores era un vector de ataque crítico.</p>
+            <form method="post" asp-action="ImportarDatosBinario">
+                <button type="submit" class="btn btn-danger">
+                    Simular Importación Binaria
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Demo 2: JSON sin validación -->
+    <div class="card mb-3 border-warning">
+        <div class="card-header bg-warning text-dark">
+            Demo 2: JSON sin Validación de Esquema
+        </div>
+        <div class="card-body">
+            <p>Acepta <strong>cualquier estructura JSON</strong> sin verificar que corresponda al modelo esperado.
+               Un atacante puede inyectar campos como "rol" o "permisos".</p>
+            <pre class="bg-dark text-white p-2 rounded"><code>// Payload de ataque:
+{
+  "tema": "oscuro",
+  "idioma": "es",
+  "rol": "Administrador",
+  "permisos": ["eliminar_todo"]
+}</code></pre>
+            <p class="text-muted small">Use Postman o curl para enviar este JSON a <code>POST /IntegridadVulnerable/importar-configuracion</code></p>
+        </div>
+    </div>
+
+    <!-- Demo 3: Actualización sin verificar -->
+    <div class="card mb-3 border-danger">
+        <div class="card-header bg-danger text-white">
+            Demo 3: Actualización sin Verificación de Integridad
+        </div>
+        <div class="card-body">
+            <p>Aplica una "actualización" sin verificar <strong>hash SHA-256 ni firma digital</strong>.
+               Un atacante MITM podría reemplazar el contenido.</p>
+            <form method="post" asp-action="AplicarActualizacion">
+                <div class="input-group mb-2">
+                    <input type="text" name="urlActualizacion" class="form-control"
+                           value="http://sitio-malicioso.com/update.zip" />
+                    <button type="submit" class="btn btn-danger">Aplicar sin Verificar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-controller="IntegridadSeguro" asp-action="Index" class="btn btn-success">
+            <i class="bi bi-shield-check"></i> Ver Versión Segura
+        </a>
+    </div>
+</div>
