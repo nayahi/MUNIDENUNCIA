@@ -32,11 +32,11 @@ public class SsrfSeguroController : Controller
     // =========================================================================
     private static readonly Dictionary<string, string> ServiciosPermitidos = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["api.hacienda.go.cr"]      = "Ministerio de Hacienda - Facturación Electrónica",
-        ["api.tse.go.cr"]           = "Tribunal Supremo de Elecciones - Padrón Electoral",
-        ["gee.bccr.fi.cr"]          = "Banco Central - Tipo de Cambio",
-        ["www.pgrweb.go.cr"]        = "Procuraduría General - SINALEVI",
-        ["api.munidenuncia.go.cr"]  = "MuniDenuncia - Servicios Internos (demo)"
+        ["api.hacienda.go.cr"] = "Ministerio de Hacienda - Facturación Electrónica",
+        ["api.tse.go.cr"] = "Tribunal Supremo de Elecciones - Padrón Electoral",
+        ["gee.bccr.fi.cr"] = "Banco Central - Tipo de Cambio",
+        ["www.pgrweb.go.cr"] = "Procuraduría General - SINALEVI",
+        ["api.munidenuncia.go.cr"] = "MuniDenuncia - Servicios Internos (demo)"
     };
 
     public SsrfSeguroController(

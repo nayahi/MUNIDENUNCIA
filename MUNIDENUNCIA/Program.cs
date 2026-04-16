@@ -8,6 +8,7 @@ using MUNIDENUNCIA.Models;
 using MUNIDENUNCIA.Services;
 using Serilog;
 using Serilog.Events;
+using MuniDenuncia.Configuration;
 
 
 // Configurar Serilog ANTES de crear el builder
@@ -120,6 +121,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 //después de dos horas, reduciendo la ventana de oportunidad para que alguien use una sesión abandonada.
 
 // Configurar políticas de autorización personalizadas (opcional, para escenarios avanzados)
+//??
 builder.Services.AddAuthorization(options =>
 {
     // Política que requiere rol de Funcionario o Administrador
@@ -140,6 +142,10 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddControllersWithViews();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// BLOQUE 1: HttpClientFactory (REQUERIDO para demos A10 - SSRF)
+// Agregar DESPUÉS de builder.Services.AddControllersWithViews():
+// ─────────────────────────────────────────────────────────────────────────────
 // HttpClient genérico (usado por SsrfVulnerableController para la demo)
 builder.Services.AddHttpClient();
 
@@ -163,11 +169,25 @@ builder.Services.AddHttpClient("SsrfSeguro", client =>
     MaxAutomaticRedirections = 0
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// BLOQUE 2: Políticas de Autorización Centralizadas (MEJORA Semana 2)
+// Agregar DESPUÉS del BLOQUE 1.
+// Requiere: using MuniDenuncia.Configuration;
+//
+// NOTA PEDAGÓGICA:
+// MuniDenuncia actualmente autoriza con [Authorize] + User.IsInRole("...")
+// inline. Esta mejora centraliza las reglas en políticas nombradas, que es
+// la práctica recomendada en ASP.NET Core 8. Los estudiantes verán AMBOS
+// enfoques en el curso para entender la progresión.
+// ─
+// Registra RequiereAdmin, RequiereFuncionario, RequiereCiudadano, PersonalInterno
+builder.Services.AddMuniDenunciaAuthorizationPolicies();
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AGREGAR DESPUÉS DEL BLOQUE ANTERIOR (OPCIONAL):
-// Bloque 2: Rate Limiting básico para demo de A07 (Fallas de Autenticación)
-// ─────────────────────────────────────────────────────────────────────────────
+// BLOQUE 3: Rate Limiting para demo A07 (OPCIONAL)
+// Agregar DESPUÉS del BLOQUE 2.
+// Requiere: using System.Threading.RateLimiting; (ya incluido en .NET 8)
+// ───
 
 builder.Services.AddRateLimiter(options =>
 {
