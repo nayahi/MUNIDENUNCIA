@@ -268,6 +268,27 @@ app.Use(async (context, next) =>
     context.Response.Headers.Remove("Server");
     context.Response.Headers.Remove("X-Powered-By");
 
+    /*
+     * Header Estado Para qué sirve
+Strict-Transport-Security FALTA — crítico Sin HSTS un MITM hace downgrade a HTTPX
+X-XSS-Protection: 1; mode=block Falta (menor) Navegadores legacy; Chromium lo ignoró pero IE/Edge legacy no
+Cross-Origin-Opener-Policy Falta Previene que ventanas externas accedan a window.opener
+Cross-Origin-Resource-Policy Falta Controla quién puede cargar tus recursos
+Cache-Control en respuestas sensibles Falta Sin no-store en páginas autenticadas, el botón "atrás" muestra datos
+     * */
+    // CRÍTICO - agregar
+    context.Response.Headers.Add("Strict-Transport-Security",
+        "max-age=31536000; includeSubDomains");
+
+    // Recomendados
+    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
+    context.Response.Headers.Add("Cross-Origin-Resource-Policy", "same-origin");
+
+    // En páginas con datos sensibles (detrás de auth)
+    context.Response.Headers.Add("Cache-Control", "no-store, no-cache, must-revalidate");
+    context.Response.Headers.Add("Pragma", "no-cache");
+
     //o enviar un valor generico en lugar de Kestrel
     //context.Response.Headers.Remove("Server");
     //context.Response.Headers.Add("Server", "WebServer"); // Valor genérico
