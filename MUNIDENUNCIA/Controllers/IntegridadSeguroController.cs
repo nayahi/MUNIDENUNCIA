@@ -179,7 +179,7 @@ public class IntegridadSeguroController : Controller
             // Limitar tamaño del payload antes de deserializar
             if (jsonString.Length > 65_536)
             {
-                _logger.LogWarning("A08 Defensa: Payload JSON demasiado grande ({Size} bytes)", 
+                _logger.LogWarning("A08 Defensa: Payload JSON demasiado grande ({Size} bytes)",
                     jsonString.Length);
                 return BadRequest("El payload excede el tamaño máximo permitido (64 KB).");
             }

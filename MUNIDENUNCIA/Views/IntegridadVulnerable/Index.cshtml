@@ -22,8 +22,10 @@
             Demo 1: Deserialización Binaria (BinaryFormatter)
         </div>
         <div class="card-body">
-            <p>BinaryFormatter permite <strong>ejecución remota de código</strong> durante la deserialización.
-               En .NET 8 está bloqueado por defecto, pero en versiones anteriores era un vector de ataque crítico.</p>
+            <p>
+                BinaryFormatter permite <strong>ejecución remota de código</strong> durante la deserialización.
+                En .NET 8 está bloqueado por defecto, pero en versiones anteriores era un vector de ataque crítico.
+            </p>
             <form method="post" asp-action="ImportarDatosBinario">
                 <button type="submit" class="btn btn-danger">
                     Simular Importación Binaria
@@ -38,8 +40,10 @@
             Demo 2: JSON sin Validación de Esquema
         </div>
         <div class="card-body">
-            <p>Acepta <strong>cualquier estructura JSON</strong> sin verificar que corresponda al modelo esperado.
-               Un atacante puede inyectar campos como "rol" o "permisos".</p>
+            <p>
+                Acepta <strong>cualquier estructura JSON</strong> sin verificar que corresponda al modelo esperado.
+                Un atacante puede inyectar campos como "rol" o "permisos".
+            </p>
             <pre class="bg-dark text-white p-2 rounded"><code>// Payload de ataque:
 {
   "tema": "oscuro",
@@ -57,8 +61,10 @@
             Demo 3: Actualización sin Verificación de Integridad
         </div>
         <div class="card-body">
-            <p>Aplica una "actualización" sin verificar <strong>hash SHA-256 ni firma digital</strong>.
-               Un atacante MITM podría reemplazar el contenido.</p>
+            <p>
+                Aplica una "actualización" sin verificar <strong>hash SHA-256 ni firma digital</strong>.
+                Un atacante MITM podría reemplazar el contenido.
+            </p>
             <form method="post" asp-action="AplicarActualizacion">
                 <div class="input-group mb-2">
                     <input type="text" name="urlActualizacion" class="form-control"
