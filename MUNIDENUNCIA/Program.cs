@@ -2,19 +2,19 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Win32;
+using MUNIDENUNCIA.Configuration;
+using MUNIDENUNCIA.Middleware;
 using MUNIDENUNCIA.Data;
 using MUNIDENUNCIA.Models;
 using MUNIDENUNCIA.Services;
 using Serilog;
 using Serilog.Events;
-using MuniDenuncia.Configuration;
 
 
 // Configurar Serilog ANTES de crear el builder
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
-    .MinimumLevel.Override("Microsoft.AspNetCore", (LogEventLevel)LogLevel.Warning)
+    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .Enrich.WithMachineName()
     .Enrich.WithEnvironmentName()
@@ -90,6 +90,16 @@ builder.Services.AddScoped<MUNIDENUNCIA.Services.IDataProtectionService,
 builder.Services.AddScoped<MUNIDENUNCIA.Services.IFileUploadService,
     MUNIDENUNCIA.Services.FileUploadService>();
 
+//Semana 3
+// A07 — Servicio de MFA/TOTP
+builder.Services.AddScoped<TwoFactorAuthService>();
+// A08 — Servicio de firma digital (singleton porque carga las claves una vez)
+builder.Services.AddSingleton<FirmaDigitalService>();
+// A09 — Servicio de detección de anomalías
+builder.Services.AddScoped<AnomalyDetectionService>();
+// A10 — Handler SSRF reutilizable (transient porque lo inyecta HttpClientFactory)
+builder.Services.AddTransient<IpFilteringHttpHandler>();
+
 // Configurar límite de tamaño de archivos subidos (importante para seguridad)
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
@@ -122,16 +132,15 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // Configurar políticas de autorización personalizadas (opcional, para escenarios avanzados)
 //??
+
 builder.Services.AddAuthorization(options =>
 {
     // Política que requiere rol de Funcionario o Administrador
     options.AddPolicy("RequiereFuncionarioOSuperior", policy =>
         policy.RequireRole("Funcionario", "Administrador"));
-
     // Política que requiere solo Administrador
     options.AddPolicy("RequiereAdministrador", policy =>
         policy.RequireRole("Administrador"));
-
     // Política personalizada: Puede gestionar denuncias
     options.AddPolicy("PuedeGestionarDenuncias", policy =>
         policy.RequireAssertion(context =>
@@ -149,6 +158,28 @@ builder.Services.AddControllersWithViews();
 // HttpClient genérico (usado por SsrfVulnerableController para la demo)
 builder.Services.AddHttpClient();
 
+
+// BLOQUE 2: Encadenar el handler SSRF al HttpClient tipado "SsrfSeguro"
+// MODIFICAR el AddHttpClient("SsrfSeguro") existente de Semana 2 para incluir
+// .AddHttpMessageHandler<IpFilteringHttpHandler>()
+
+builder.Services.AddHttpClient("SsrfSeguro", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(5); //Timeout restrictivo: 5 segundos máximo
+    client.MaxResponseContentBufferSize = 1_048_576; //Limitar tamaño de respuesta: 1 MB máximo
+    client.DefaultRequestHeaders.UserAgent.ParseAdd(
+        "MuniDenuncia-HealthCheck/1.0 (+https://munidenuncia.go.cr)"); //User-Agent identificable para auditoría
+})
+.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler //No seguir redirecciones automáticamente(previene SSRF por redirect)
+{
+    AllowAutoRedirect = false, //// ← Previene SSRF por cadena de redirects
+    MaxAutomaticRedirections = 0
+})
+// ← NUEVO en Semana 3: agregar el handler de filtrado IP al pipeline
+.AddHttpMessageHandler<IpFilteringHttpHandler>();
+
+
+/*Semana 2
 // HttpClient seguro con restricciones (usado por SsrfSeguroController)
 builder.Services.AddHttpClient("SsrfSeguro", client =>
 {
@@ -168,6 +199,8 @@ builder.Services.AddHttpClient("SsrfSeguro", client =>
     AllowAutoRedirect = false,             // ← Previene SSRF por cadena de redirects
     MaxAutomaticRedirections = 0
 });
+*/
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BLOQUE 2: Políticas de Autorización Centralizadas (MEJORA Semana 2)
@@ -181,7 +214,7 @@ builder.Services.AddHttpClient("SsrfSeguro", client =>
 // enfoques en el curso para entender la progresión.
 // ─
 // Registra RequiereAdmin, RequiereFuncionario, RequiereCiudadano, PersonalInterno
-builder.Services.AddMuniDenunciaAuthorizationPolicies();
+//builder.Services.AddMuniDenunciaAuthorizationPolicies();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BLOQUE 3: Rate Limiting para demo A07 (OPCIONAL)
@@ -222,14 +255,6 @@ builder.Services.AddRateLimiter(options =>
     };
 });
 
-/////////
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.Cookie.SameSite = SameSiteMode.Strict;
-});
 
 // Configurar HTTPS
 builder.Services.AddHttpsRedirection(options =>
@@ -254,7 +279,15 @@ builder.Services.AddHsts(options =>
 //-**Preload = true * *: Permite incluir el sitio en la lista de precarga HSTS de navegadores
 //- **Resultado**: Después de la primera visita, el navegador NUNCA intentará conexión HTTP, siempre usará HTTPS
 
-///
+/////////
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+});
+
 
 var app = builder.Build();
 
@@ -270,23 +303,23 @@ app.Use(async (context, next) =>
     //context.Response.Headers.Add("Content-Security-Policy",
     //    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:");
 
-    context.Response.Headers.Add("Content-Security-Policy",
+    context.Response.Headers["Content-Security-Policy"] =
             "default-src 'self'; " +
             "script-src 'self'; " +  // NO 'unsafe-inline' - bloquea scripts inyectados
             "style-src 'self'; " +
             "object-src 'none'; " +   // Bloquea Flash, Java, etc.
             "base-uri 'self'; " +     // Previene ataques de base tag
-            "frame-ancestors 'none'"); // Previene clickjacking
+            "frame-ancestors 'none'"; // Previene clickjacking
 
 
-    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
-    context.Response.Headers.Add("X-Frame-Options", "DENY");
-    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
-    context.Response.Headers.Add("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    context.Response.Headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()";
 
     // Remover headers que revelan información
-    context.Response.Headers.Remove("Server");
-    context.Response.Headers.Remove("X-Powered-By");
+    //context.Response.Headers.Remove("Server");
+    //context.Response.Headers.Remove("X-Powered-By");
 
     /*
      * Header Estado Para qué sirve
@@ -297,18 +330,16 @@ Cross-Origin-Resource-Policy Falta Controla quién puede cargar tus recursos
 Cache-Control en respuestas sensibles Falta Sin no-store en páginas autenticadas, el botón "atrás" muestra datos
      * */
     // CRÍTICO - agregar
-    context.Response.Headers.Add("Strict-Transport-Security",
-        "max-age=31536000; includeSubDomains");
+    context.Response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
 
     // Recomendados
-    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
-    context.Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
-    context.Response.Headers.Add("Cross-Origin-Resource-Policy", "same-origin");
+    //context.Response.Headers["X-XSS-Protection"] = "1; mode=block"; //No hace falta en navegadores modernos, pero útil para legacy, deprecado por OWASP
+    context.Response.Headers["Cross-Origin-Opener-Policy"] = "same-origin";
+    context.Response.Headers["Cross-Origin-Resource-Policy"] = "same-origin";
 
     // En páginas con datos sensibles (detrás de auth)
-    context.Response.Headers.Add("Cache-Control", "no-store, no-cache, must-revalidate");
-    context.Response.Headers.Add("Pragma", "no-cache");
-
+    //context.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+    //context.Response.Headers["Pragma"] = "no-cache";
     //o enviar un valor generico en lugar de Kestrel
     //context.Response.Headers.Remove("Server");
     //context.Response.Headers.Add("Server", "WebServer"); // Valor genérico
@@ -316,17 +347,26 @@ Cache-Control en respuestas sensibles Falta Sin no-store en páginas autenticada
     await next();
 });
 
-
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseRateLimiter(); 
+app.UseRateLimiter();
 //UseAuthentication debe llamarse antes de UseAuthorization porque primero necesitamos identificar al usuario antes
 //de determinar sus permisos.
 //UseRouting debe preceder a UseAuthentication porque el sistema de autenticación necesita conocer qué endpoint
 //se está solicitando.
+
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity?.IsAuthenticated == true)
+    {
+        context.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+        context.Response.Headers["Pragma"] = "no-cache";
+    }
+    await next();
+});
 
 app.MapControllerRoute(
     name: "default",
@@ -359,57 +399,5 @@ using (var scope = app.Services.CreateScope())
 Log.Information("MUNIDENUNCIA iniciado correctamente");
 
 app.Run();
-
-//static async Task SeedRolesAndAdminUser(IServiceProvider serviceProvider)
-//{
-//    var roleManager = serviceProvider
-//        .GetRequiredService<RoleManager<IdentityRole>>();
-//    var userManager = serviceProvider
-//        .GetRequiredService<UserManager<ApplicationUser>>();
-//    var logger = serviceProvider
-//        .GetRequiredService<ILogger<Program>>();
-
-//    string[] roleNames = {
-//        RoleNames.Administrador,
-//        RoleNames.Funcionario,
-//        RoleNames.Auditor
-//    };
-
-//    foreach (var roleName in roleNames)
-//    {
-//        var roleExist = await roleManager.RoleExistsAsync(roleName);
-//        if (!roleExist)
-//        {
-//            await roleManager.CreateAsync(new IdentityRole(roleName));
-//            logger.LogInformation("Rol {RoleName} creado", roleName);
-//        }
-//    }
-
-//    var adminEmail = "admin@sumunicipalidad.go.cr";
-//    var adminUser = await userManager.FindByEmailAsync(adminEmail);
-
-//    if (adminUser == null)
-//    {
-//        var newAdmin = new ApplicationUser
-//        {
-//            UserName = adminEmail,
-//            Email = adminEmail,
-//            EmailConfirmed = true,
-//            NombreCompleto = "Administrador del Sistema",
-//            Departamento = "Tecnologías de Información",
-//            FechaRegistro = DateTime.UtcNow
-//        };
-
-//        var createAdmin = await userManager.CreateAsync(
-//            newAdmin,
-//            "Admin@MUNIDENUNCIA2025!");
-
-//        if (createAdmin.Succeeded)
-//        {
-//            await userManager.AddToRoleAsync(newAdmin, RoleNames.Administrador);
-//            logger.LogInformation("Usuario administrador creado");
-//        }
-//    }
-//}
 
 

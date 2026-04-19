@@ -1,0 +1,173 @@
+@*
+    Views/Auditoria/Index.cshtml
+    Semana 3 - A09: Dashboard principal de auditoría con alertas
+*@
+@model MUNIDENUNCIA.ViewModels.DashboardAuditoriaViewModel
+@{
+    ViewData["Title"] = "Dashboard de auditoría";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>@ViewData["Title"]</h2>
+    <div>
+        <a asp-action="Logs" class="btn btn-outline-secondary">Ver logs completos</a>
+        <a asp-action="Exportar" class="btn btn-outline-primary">Exportar CSV firmado</a>
+    </div>
+</div>
+
+<!-- =========================================================================
+     SECCIÓN 1: Alertas activas (lo primero que debe ver el auditor)
+     ========================================================================= -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <strong>Alertas activas</strong>
+                <span>
+                    <span class="badge bg-danger">@Model.AlertasAltas altas</span>
+                    <span class="badge bg-warning text-dark">@Model.AlertasMedias medias</span>
+                    <span class="badge bg-info text-dark">@Model.AlertasBajas bajas</span>
+                </span>
+            </div>
+            <div class="card-body">
+                @if (Model.Alertas.Count == 0)
+                {
+                    <p class="text-muted mb-0">
+                        ✓ No se detectaron anomalías en los últimos períodos de análisis.
+                    </p>
+                }
+                else
+                {
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Severidad</th>
+                                <th>Tipo</th>
+                                <th>Descripción</th>
+                                <th>Detectada</th>
+                                <th>Ocurrencias</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var alerta in Model.Alertas)
+                            {
+                                var clase = alerta.Severidad switch
+                                {
+                                    "alta"  => "table-danger",
+                                    "media" => "table-warning",
+                                    _       => "table-info"
+                                };
+                                <tr class="@clase">
+                                    <td><strong>@alerta.Severidad.ToUpperInvariant()</strong></td>
+                                    <td>@alerta.Tipo</td>
+                                    <td>@alerta.Descripcion</td>
+                                    <td>@alerta.DetectadaEn.ToLocalTime().ToString("dd/MM HH:mm")</td>
+                                    <td>@alerta.OcurrenciasRelacionadas</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     SECCIÓN 2: Métricas de últimas 24 horas
+     ========================================================================= -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3>@Model.TotalEventos24h</h3>
+                <p class="text-muted mb-0">Eventos totales (24h)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-success">@Model.LoginsExitosos24h</h3>
+                <p class="text-muted mb-0">Logins exitosos (24h)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-warning">@Model.LoginsFallidos24h</h3>
+                <p class="text-muted mb-0">Logins fallidos (24h)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-danger">@Model.MfaFallidos24h</h3>
+                <p class="text-muted mb-0">MFA fallidos (24h)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     SECCIÓN 3: Top eventos + últimos eventos lado a lado
+     ========================================================================= -->
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><strong>Top tipos de evento (24h)</strong></div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var top in Model.TopEventos)
+                        {
+                            <tr>
+                                <td><code>@top.Tipo</code></td>
+                                <td class="text-end">@top.Total</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header"><strong>Últimos 20 eventos</strong></div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Hora</th>
+                            <th>Evento</th>
+                            <th>Usuario</th>
+                            <th>IP</th>
+                            <th>Éxito</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ev in Model.EventosRecientes)
+                        {
+                            <tr class="@(ev.Success ? "" : "table-warning")">
+                                <td>@ev.Timestamp.ToLocalTime().ToString("HH:mm:ss")</td>
+                                <td><code>@ev.EventType</code></td>
+                                <td>@(ev.UserId ?? "-")</td>
+                                <td>@ev.IpAddress</td>
+                                <td>@(ev.Success ? "✓" : "✗")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

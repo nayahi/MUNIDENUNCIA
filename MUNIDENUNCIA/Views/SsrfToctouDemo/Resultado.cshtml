@@ -1,0 +1,25 @@
+@*
+    Views/SsrfToctouDemo/Resultado.cshtml
+    Semana 3 - A10: Resultado de demos TOCTOU
+*@
+@{
+    ViewData["Title"] = "Resultado de demo SSRF";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">
+        <strong>Rechazado por defensa:</strong> @ViewBag.Error
+    </div>
+}
+else
+{
+    <div class="alert alert-success">
+        <strong>Petición completada:</strong> @ViewBag.Resultado
+    </div>
+    <pre class="bg-light p-3">@ViewBag.Contenido</pre>
+}
+
+<a asp-action="Index" class="btn btn-secondary">Volver a la demo</a>

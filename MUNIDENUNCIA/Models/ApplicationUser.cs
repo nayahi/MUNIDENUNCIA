@@ -21,6 +21,12 @@ namespace MUNIDENUNCIA.Models
 
         public bool RequiereCambioContrasena { get; set; }
 
+        //Semana 3 - A02: Implementación de MFA con TOTP
+        public string? TotpSecret { get; set; }   // cifrado con Data Protection
+        public bool TotpEnabled { get; set; }
+        public string? RecoveryCodesHash { get; set; }   // JSON de hashes SHA-256
+        public DateTime? MfaEnabledOn { get; set; }
+
         public virtual ICollection<AuditLog> LogsAuditoria { get; set; }
             = new List<AuditLog>();
     }
