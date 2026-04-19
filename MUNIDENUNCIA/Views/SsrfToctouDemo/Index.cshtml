@@ -1,0 +1,49 @@
+@*
+    Views/SsrfToctouDemo/Index.cshtml
+    Semana 3 - A10: Página de demostración del ataque TOCTOU
+*@
+@{
+    ViewData["Title"] = "Demo SSRF anti-TOCTOU";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="alert alert-info">
+    <strong>Contexto pedagógico.</strong> Esta página compara dos implementaciones
+    de validación SSRF: la vulnerable a TOCTOU (Time Of Check, Time Of Use) y la
+    que cierra esa ventana forzando la conexión a la IP ya validada.
+</div>
+
+<div class="card mb-4">
+    <div class="card-header"><strong>Versión VULNERABLE (demo solamente)</strong></div>
+    <div class="card-body">
+        <p>
+            Valida la IP, luego llama a HttpClient que RE-RESUELVE DNS. Un atacante
+            con TTL=0 puede cambiar la IP entre ambas resoluciones.
+        </p>
+        <form asp-action="VersionVulnerable" method="get">
+            <div class="input-group">
+                <input type="text" name="host" class="form-control"
+                       placeholder="api.hacienda.go.cr" />
+                <button class="btn btn-warning" type="submit">Probar vulnerable</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><strong>Versión SEGURA (producción)</strong></div>
+    <div class="card-body">
+        <p>
+            Resuelve DNS una vez, valida, y fuerza la conexión TCP a esa IP exacta
+            usando <code>SocketsHttpHandler.ConnectCallback</code>.
+        </p>
+        <form asp-action="VersionSegura" method="get">
+            <div class="input-group">
+                <input type="text" name="host" class="form-control"
+                       placeholder="api.hacienda.go.cr" />
+                <button class="btn btn-primary" type="submit">Probar seguro</button>
+            </div>
+        </form>
+    </div>
+</div>

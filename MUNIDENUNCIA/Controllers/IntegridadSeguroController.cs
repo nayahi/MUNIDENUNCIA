@@ -13,7 +13,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MuniDenuncia.Controllers;
+namespace MUNIDENUNCIA.Controllers;
 
 // =========================================================================
 // Modelo fuertemente tipado para configuración — solo acepta campos conocidos

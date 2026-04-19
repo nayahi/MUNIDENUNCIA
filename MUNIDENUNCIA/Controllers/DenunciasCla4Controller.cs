@@ -28,6 +28,7 @@ namespace MUNIDENUNCIA.Controllers
     /// 
     /// Este es el código que debe usarse en PRODUCCIÓN
     /// </summary>
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     [Authorize] // ✅ Requiere autenticación para todas las acciones
     public class DenunciasCla4Controller : Controller
     {

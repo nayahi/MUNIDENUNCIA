@@ -1,0 +1,51 @@
+@*
+    Views/Manage/CodigosRespaldo.cshtml
+    Semana 3 - A07: Vista de códigos de respaldo (se muestra UNA sola vez)
+*@
+@model MUNIDENUNCIA.ViewModels.CodigosRespaldoViewModel
+@{
+    ViewData["Title"] = "Códigos de respaldo";
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <h2>@ViewData["Title"]</h2>
+
+        <div class="alert alert-warning">
+            <strong>⚠ Guarde estos códigos AHORA.</strong>
+            Son la única forma de recuperar el acceso a su cuenta si pierde
+            su teléfono. No podrá verlos de nuevo.
+        </div>
+
+        <div class="card my-3">
+            <div class="card-body">
+                <p class="text-muted mb-3">
+                    Generados el @Model.GeneradosEn.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                </p>
+
+                <div class="row">
+                    @foreach (var codigo in Model.Codigos)
+                    {
+                        <div class="col-6 mb-2">
+                            <code style="font-size: 1.2em;">@codigo</code>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <h4>Recomendaciones</h4>
+        <ul>
+            <li>Imprima esta página o guarde los códigos en un gestor de contraseñas.</li>
+            <li>Cada código funciona una sola vez.</li>
+            <li>No los comparta por email, WhatsApp ni mensaje de texto.</li>
+            <li>Si sospecha que alguien los vio, regenere nuevos códigos inmediatamente.</li>
+        </ul>
+
+        <form asp-action="Index" method="get" class="mt-4">
+            <button type="submit" class="btn btn-primary">
+                Ya los guardé en un lugar seguro
+            </button>
+        </form>
+    </div>
+</div>

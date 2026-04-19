@@ -1,0 +1,114 @@
+@*
+    Views/Firma/Index.cshtml
+    Semana 3 - A08: Página de demostración de firma digital
+*@
+@{
+    ViewData["Title"] = "Firma digital de documentos";
+}
+
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <h2>@ViewData["Title"]</h2>
+
+        <p class="lead">
+            MuniDenuncia firma digitalmente los reportes oficiales con RSA-2048
+            y SHA-256 para garantizar su integridad y autenticidad.
+        </p>
+
+        @if (ViewBag.Resultado != null)
+        {
+            <div class="alert @(ViewBag.Resultado.ToString().StartsWith("✓") ? "alert-success" : "alert-danger")">
+                <strong>@ViewBag.Archivo</strong><br />
+                @ViewBag.Resultado
+            </div>
+        }
+
+        <div class="row mt-4">
+            <!-- ========================== Descargar reporte firmado ========================== -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <strong>1. Descargar reporte firmado</strong>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            Genera un reporte oficial con su firma digital en un
+                            archivo ZIP.
+                        </p>
+                        <form asp-action="DescargarReporteFirmado" method="post">
+                            @Html.AntiForgeryToken()
+                            <div class="form-group mb-3">
+                                <label>Tipo de reporte:</label>
+                                <select name="tipoReporte" class="form-control">
+                                    <option value="denuncias">Mis denuncias</option>
+                                    <option value="permisos">Mis permisos</option>
+                                    <option value="acta">Acta oficial</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                Descargar ZIP firmado
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================== Verificar firma ========================== -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <strong>2. Verificar un documento</strong>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            Suba el documento y su firma (.sig) para verificar
+                            que no fue modificado.
+                        </p>
+                        <form asp-action="Verificar" method="post" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+                            <div class="form-group mb-3">
+                                <label>Documento:</label>
+                                <input type="file" name="archivo" class="form-control" required />
+                            </div>
+                            <div class="form-group mb-3">
+                                <label>Firma (.sig):</label>
+                                <input type="file" name="firma" class="form-control" required />
+                            </div>
+                            <button type="submit" class="btn btn-primary">Verificar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <!-- ========================== Clave pública + SRI ========================== -->
+        <h4>Clave pública</h4>
+        <p>
+            La clave pública de MuniDenuncia está disponible para que cualquiera
+            pueda verificar firmas sin depender del servidor:
+        </p>
+        <p>
+            <a asp-action="ClavePublica" class="btn btn-outline-secondary">
+                Descargar clave pública (.pem)
+            </a>
+        </p>
+
+        <h4 class="mt-4">Subresource Integrity (SRI) para recursos externos</h4>
+        <p>
+            Cuando MuniDenuncia carga scripts desde un CDN, siempre usa el
+            atributo <code>integrity</code> con hash SHA-384 para evitar que
+            un CDN comprometido sirva código malicioso:
+        </p>
+        <pre class="bg-light p-3"><code>&lt;script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@@5.3.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+    crossorigin="anonymous"&gt;
+&lt;/script&gt;</code></pre>
+        <p>
+            Si el CDN modifica el archivo (ataque a la cadena de suministro),
+            el navegador rechaza el script porque el hash no coincide.
+        </p>
+    </div>
+</div>

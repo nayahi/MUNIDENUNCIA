@@ -15,7 +15,7 @@
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace MuniDenuncia.Controllers;
+namespace MUNIDENUNCIA.Controllers;
 
 /// <summary>
 /// Controlador VULNERABLE a SSRF (OWASP A10).

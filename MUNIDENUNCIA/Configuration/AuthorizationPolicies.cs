@@ -20,7 +20,7 @@
 
 using Microsoft.AspNetCore.Authorization;
 
-namespace MuniDenuncia.Configuration;
+namespace MUNIDENUNCIA.Configuration;
 
 /// <summary>
 /// Extensiones para registrar políticas de autorización de MuniDenuncia.

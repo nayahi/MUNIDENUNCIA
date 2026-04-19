@@ -12,7 +12,7 @@ using System.Net;
 using System.Net.Sockets;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MuniDenuncia.Controllers;
+namespace MUNIDENUNCIA.Controllers;
 
 /// <summary>
 /// Controlador SEGURO contra SSRF (OWASP A10).

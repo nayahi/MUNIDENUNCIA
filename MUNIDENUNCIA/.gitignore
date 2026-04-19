@@ -372,3 +372,6 @@ appsettings.*.json
 
 # O más general, si quieres ignorar todas las librerías que metas ahí
 wwwroot/lib/bootstrap/
+App_Data/firma-digital/
+DataProtection-Keys/
+logs/

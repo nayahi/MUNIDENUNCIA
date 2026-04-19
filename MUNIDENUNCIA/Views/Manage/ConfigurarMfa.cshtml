@@ -1,0 +1,72 @@
+@*
+    Views/Manage/ConfigurarMfa.cshtml
+    Semana 3 - A07: Vista de configuración inicial de MFA
+*@
+@model MUNIDENUNCIA.ViewModels.ConfigurarMfaViewModel
+@{
+    ViewData["Title"] = "Configurar autenticación en dos pasos";
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <h2>@ViewData["Title"]</h2>
+
+        <div class="alert alert-info">
+            <strong>¿Qué es esto?</strong><br />
+            La autenticación en dos pasos agrega una capa extra de seguridad a su cuenta.
+            Después de su contraseña, le pediremos un código de 6 dígitos que se genera
+            en su teléfono. Incluso si alguien conoce su contraseña, no podrá ingresar
+            sin su teléfono.
+        </div>
+
+        <ol class="mb-4">
+            <li class="mb-2">
+                Instale una app de autenticación en su teléfono:
+                <ul>
+                    <li>Google Authenticator (Android / iOS)</li>
+                    <li>Microsoft Authenticator (Android / iOS)</li>
+                    <li>FreeOTP (código abierto)</li>
+                </ul>
+            </li>
+            <li class="mb-2">
+                Abra la app y escanee este código QR:
+                <div class="text-center my-3">
+                    <img src="@Model.QrCodeDataUri"
+                         alt="Código QR para configurar MFA"
+                         style="max-width: 250px;" />
+                </div>
+            </li>
+            <li class="mb-2">
+                ¿No puede escanear? Ingrese este código manualmente en su app:
+                <div class="alert alert-secondary text-center">
+                    <code style="font-size: 1.2em; letter-spacing: 2px;">
+                        @Model.Secreto
+                    </code>
+                </div>
+            </li>
+            <li>
+                Ingrese el código de 6 dígitos que muestra su app para confirmar:
+            </li>
+        </ol>
+
+        <form asp-action="ConfigurarMfa" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="form-group mb-3">
+                <label asp-for="Codigo" class="form-label"></label>
+                <input asp-for="Codigo"
+                       class="form-control"
+                       autocomplete="one-time-code"
+                       inputmode="numeric"
+                       maxlength="6"
+                       placeholder="123456" />
+                <span asp-validation-for="Codigo" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Activar autenticación en dos pasos
+            </button>
+            <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>

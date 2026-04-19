@@ -11,7 +11,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MuniDenuncia.Controllers;
+namespace MUNIDENUNCIA.Controllers;
 
 /// <summary>
 /// Controlador VULNERABLE que demuestra fallas de integridad de datos (OWASP A08).
