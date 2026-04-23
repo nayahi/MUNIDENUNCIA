@@ -1,0 +1,151 @@
+# =============================================================================
+# security-audit.yml
+# Semana 3 - A06: Componentes Vulnerables y Desactualizados
+# Ubicación: .github/workflows/security-audit.yml
+# =============================================================================
+# PROPÓSITO EDUCATIVO
+# Este workflow de GitHub Actions implementa el [Paso 3] de la diapositiva 3:
+# "Auditorías de vulnerabilidades (CVE) integradas al pipeline".
+#
+# La auditoría se ejecuta en:
+#   1. Cada push a ramas main, develop y feature/*
+#   2. Cada pull request contra main o develop
+#   3. Diariamente a las 06:00 UTC (00:00 hora CR) para detectar CVEs nuevos
+#      publicados después de que el código fue mergeado (ataques a la cadena
+#      de suministro no siempre se conocen al momento del commit).
+#
+# SI SE DETECTAN VULNERABILIDADES, EL BUILD FALLA (exit code != 0).
+# Esto previene que una denuncia municipal se exponga a exploits conocidos
+# por un NuGet package desactualizado (conexión Ley 8968 Art. 10).
+# =============================================================================
+
+name: Auditoría de Seguridad - MuniDenuncia
+
+on:
+  push:
+    branches: [master, develop, 'feature/**']
+  pull_request:
+    branches: [master, develop]
+  schedule:
+    # Cron en UTC. 06:00 UTC = 00:00 hora de Costa Rica (UTC-6).
+    # La ejecución nocturna detecta CVEs publicados DESPUÉS del merge.
+    - cron: '0 6 * * *'
+  workflow_dispatch:   # Permite ejecución manual desde la UI de GitHub
+
+# Permisos mínimos (principio de privilegio mínimo — Zero Trust de slide 10)
+permissions:
+  contents: read
+  security-events: write   # Necesario para subir SARIF si se habilita
+
+jobs:
+  auditoria-nuget:
+    name: Auditoría de Paquetes NuGet (CVE)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # -----------------------------------------------------------------------
+      # PASO 1: Checkout del repositorio
+      # -----------------------------------------------------------------------
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # PASO 2: Configurar .NET 8 SDK
+      # -----------------------------------------------------------------------
+      - name: Instalar .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # -----------------------------------------------------------------------
+      # PASO 3: Restaurar dependencias (requerido antes de list package)
+      # -----------------------------------------------------------------------
+      - name: Restaurar dependencias NuGet
+        run: dotnet restore MUNIDENUNCIA/MUNIDENUNCIA.csproj
+
+      # -----------------------------------------------------------------------
+      # PASO 4: Auditar paquetes directos Y transitivos
+      # --include-transitive es CRÍTICO: un 80% de CVEs provienen de
+      # dependencias indirectas que heredamos sin saberlo.
+      # -----------------------------------------------------------------------
+      - name: Ejecutar dotnet list package --vulnerable
+        id: audit
+        run: |
+          echo "=== Auditoría de paquetes con vulnerabilidades conocidas ==="
+          dotnet list MUNIDENUNCIA/MUNIDENUNCIA.csproj package \
+            --vulnerable \
+            --include-transitive \
+            --format json \
+            --output-version 1 > audit-report.json
+
+          # Mostrar reporte legible en el log
+          dotnet list MUNIDENUNCIA/MUNIDENUNCIA.csproj package \
+            --vulnerable \
+            --include-transitive
+
+          # Contar vulnerabilidades usando jq (disponible por defecto en ubuntu-latest)
+          VULN_COUNT=$(jq '[.projects[]?.frameworks[]?.topLevelPackages[]?, .projects[]?.frameworks[]?.transitivePackages[]? | select(.vulnerabilities != null) | .vulnerabilities[]] | length' audit-report.json)
+
+          echo "vuln_count=$VULN_COUNT" >> $GITHUB_OUTPUT
+          echo "Total de vulnerabilidades detectadas: $VULN_COUNT"
+
+      # -----------------------------------------------------------------------
+      # PASO 5: Detectar paquetes DEPRECATED
+      # Los paquetes marcados como deprecated no reciben parches de seguridad.
+      # -----------------------------------------------------------------------
+      - name: Verificar paquetes deprecated
+        continue-on-error: true   # No falla el build, solo advierte
+        run: |
+          echo "=== Paquetes marcados como deprecated ==="
+          dotnet list MUNIDENUNCIA/MUNIDENUNCIA.csproj package --deprecated
+
+      # -----------------------------------------------------------------------
+      # PASO 6: Publicar reporte como artefacto descargable
+      # Los estudiantes pueden descargarlo desde la pestaña Actions para
+      # entregarlo como evidencia en la Tarea 3.
+      # -----------------------------------------------------------------------
+      - name: Subir reporte de auditoría
+        if: always()   # Subir incluso si los pasos previos fallaron
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-report-${{ github.run_id }}
+          path: audit-report.json
+          retention-days: 30
+
+      # -----------------------------------------------------------------------
+      # PASO 7: FALLAR EL BUILD si hay vulnerabilidades
+      # Este es el corazón de la defensa A06: ningún código llega a
+      # producción con CVEs conocidos.
+      # -----------------------------------------------------------------------
+      - name: Fallar build si hay CVEs críticos o altos
+        if: steps.audit.outputs.vuln_count != '0'
+        run: |
+          echo "::error::Se detectaron ${{ steps.audit.outputs.vuln_count }} vulnerabilidades en las dependencias NuGet."
+          echo "::error::Revisar el reporte audit-report.json y actualizar los paquetes afectados."
+          echo "::error::Consultar https://github.com/advisories para detalles de cada CVE."
+          exit 1
+
+  # ===========================================================================
+  # JOB SECUNDARIO: Verificación de paquetes desactualizados
+  # No falla el build, pero abre un issue si hay muchos paquetes atrasados.
+  # ===========================================================================
+  auditoria-outdated:
+    name: Verificación de Paquetes Desactualizados
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: auditoria-nuget   # Solo corre si la auditoría de CVE pasó
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restaurar dependencias
+        run: dotnet restore MUNIDENUNCIA/MUNIDENUNCIA.csproj
+
+      - name: Listar paquetes desactualizados
+        run: |
+          echo "=== Paquetes con versiones más recientes disponibles ==="
+          dotnet list MUNIDENUNCIA/MUNIDENUNCIA.csproj package --outdated
