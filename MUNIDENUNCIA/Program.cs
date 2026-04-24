@@ -150,6 +150,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddControllersWithViews();
+builder.Services.AddMemoryCache();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BLOQUE 1: HttpClientFactory (REQUERIDO para demos A10 - SSRF)
@@ -231,6 +232,14 @@ builder.Services.AddRateLimiter(options =>
         limiterOptions.Window = TimeSpan.FromMinutes(1);
         limiterOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
         limiterOptions.QueueLimit = 0; // Sin cola — rechazar inmediatamente
+    });
+
+    options.AddFixedWindowLimiter("mfa", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 5;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0;
     });
 
     // Limitar peticiones generales: 100 por minuto por IP
@@ -349,6 +358,7 @@ Cache-Control en respuestas sensibles Falta Sin no-store en páginas autenticada
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseSession();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

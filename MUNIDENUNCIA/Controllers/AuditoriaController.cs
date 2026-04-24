@@ -125,6 +125,11 @@ public class AuditoriaController : Controller
     {
         if (pagina < 1) pagina = 1;
 
+        // El input datetime-local envía tiempo sin zona. Marcamos explícitamente
+        // como UTC para que la comparación contra AuditLog.Timestamp sea correcta.
+        if (desde.HasValue) desde = DateTime.SpecifyKind(desde.Value, DateTimeKind.Utc);
+        if (hasta.HasValue) hasta = DateTime.SpecifyKind(hasta.Value, DateTimeKind.Utc);
+
         var query = _db.AuditLogs.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(tipo))
@@ -183,10 +188,14 @@ public class AuditoriaController : Controller
     {
         desde ??= DateTime.UtcNow.AddDays(-7);
         hasta ??= DateTime.UtcNow;
+        desde = DateTime.SpecifyKind(desde.Value, DateTimeKind.Utc);
+        hasta = DateTime.SpecifyKind(hasta.Value, DateTimeKind.Utc);
 
+        const int MaxExportRows = 10_000;
         var eventos = await _db.AuditLogs
             .Where(a => a.Timestamp >= desde && a.Timestamp <= hasta)
             .OrderBy(a => a.Timestamp)
+            .Take(MaxExportRows)
             .ToListAsync(ct);
 
         // Construir CSV

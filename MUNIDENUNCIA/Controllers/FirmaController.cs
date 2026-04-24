@@ -60,6 +60,10 @@ public class FirmaController : Controller
         return File(bytes, "application/x-pem-file", "munidenuncia-public-key.pem");
     }
 
+    // Whitelist explícita: evita path traversal en nombres de entrada ZIP (A08)
+    private static readonly HashSet<string> _tiposPermitidos =
+        new(StringComparer.OrdinalIgnoreCase) { "denuncias", "permisos", "acta" };
+
     // =========================================================================
     // POST /Firma/DescargarReporteFirmado
     // En la demo real, este método generaría un PDF de denuncias del ciudadano.
@@ -70,6 +74,11 @@ public class FirmaController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult DescargarReporteFirmado(string tipoReporte = "denuncias")
     {
+        // Rechazar valores no permitidos: un tipoReporte arbitrario podría
+        // generar nombres de entrada ZIP como "../../evil" (ZIP path traversal).
+        if (!_tiposPermitidos.Contains(tipoReporte))
+            tipoReporte = "denuncias";
+
         // 1. Generar el contenido del reporte
         var contenido = GenerarContenidoReporte(tipoReporte);
 
@@ -87,7 +96,7 @@ public class FirmaController : Controller
             tipoReporte, User.Identity?.Name);
 
         return File(zipBytes, "application/zip",
-            $"reporte-{tipoReporte}-{DateTime.Now:yyyyMMdd-HHmmss}.zip");
+            $"reporte-{tipoReporte}-{DateTime.UtcNow:yyyyMMdd-HHmmss}Z.zip");
     }
 
     // =========================================================================

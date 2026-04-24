@@ -89,8 +89,8 @@ public class AnomalyDetectionService
         var grupos = await _db.AuditLogs
             .Where(a => a.EventType == "LOGIN_FAILED" && a.Timestamp >= desde)
             .GroupBy(a => a.IpAddress)
-            .Where(g => g.Count() >= 5)
             .Select(g => new { Ip = g.Key, Total = g.Count() })
+            .Where(g => g.Total >= 5)
             .ToListAsync(ct);
 
         return grupos.Select(g => new Alerta(
@@ -111,10 +111,10 @@ public class AnomalyDetectionService
         var desde = ahora.AddMinutes(-10);
 
         var grupos = await _db.AuditLogs
-            .Where(a => a.EventType == "MFA_FAILED" && a.Timestamp >= desde)
+            .Where(a => a.EventType == "MFA_FAILED" && a.Timestamp >= desde && a.UserId != null)
             .GroupBy(a => a.UserId)
-            .Where(g => g.Count() >= 3)
             .Select(g => new { Usuario = g.Key, Total = g.Count() })
+            .Where(g => g.Total >= 3)
             .ToListAsync(ct);
 
         return grupos.Select(g => new Alerta(
@@ -135,10 +135,10 @@ public class AnomalyDetectionService
         var desde = ahora.AddHours(-1);
 
         var grupos = await _db.AuditLogs
-            .Where(a => a.EventType == "DENUNCIA_VIEW" && a.Timestamp >= desde)
+            .Where(a => a.EventType == "DENUNCIA_VIEW" && a.Timestamp >= desde && a.UserId != null)
             .GroupBy(a => a.UserId)
-            .Where(g => g.Count() >= 10)
             .Select(g => new { Usuario = g.Key, Total = g.Count() })
+            .Where(g => g.Total >= 10)
             .ToListAsync(ct);
 
         return grupos.Select(g => new Alerta(

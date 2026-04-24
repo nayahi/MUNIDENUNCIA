@@ -39,13 +39,13 @@
         </div>
 
         <div class="col-md-2">
-            <label class="form-label">Desde</label>
+            <label class="form-label">Desde <small class="text-muted">(UTC)</small></label>
             <input name="desde" type="datetime-local" class="form-control"
                    value="@(Model.FiltroDesde?.ToString("yyyy-MM-ddTHH:mm"))" />
         </div>
 
         <div class="col-md-2">
-            <label class="form-label">Hasta</label>
+            <label class="form-label">Hasta <small class="text-muted">(UTC)</small></label>
             <input name="hasta" type="datetime-local" class="form-control"
                    value="@(Model.FiltroHasta?.ToString("yyyy-MM-ddTHH:mm"))" />
         </div>

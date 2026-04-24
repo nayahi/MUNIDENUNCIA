@@ -1,0 +1,11 @@
+﻿==============================================
+  MUNIDENUNCIA - Reporte Oficial
+  Municipalidad Demo Costa Rica
+==============================================
+Tipo:       denuncias
+Generado:   23/04/2026 19:34:36 UTC
+Expediente: MUN-2025-001234
+Cedula:     1-0234-0567
+Descripcion: Pozo pluvial obstruido en Av. Central 42
+Estado:     ARCHIVADO - sin accion municipal
+==============================================

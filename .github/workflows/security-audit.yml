@@ -37,6 +37,9 @@ permissions:
   contents: read
   security-events: write   # Necesario para subir SARIF si se habilita
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   auditoria-nuget:
     name: Auditoría de Paquetes NuGet (CVE)

@@ -31,6 +31,7 @@
 
 	<ItemGroup>
 	  <Folder Include="App_Data\firma-digital\" />
+	  <Folder Include="Guias\" />
 	</ItemGroup>
 
 </Project>

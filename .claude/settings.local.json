@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet run *)",
+      "Bash(git -C \"C:/Users/nayah/source/repos/MUNIDENUNCIA\" diff HEAD -- MUNIDENUNCIA/Program.cs)",
+      "Bash(git -C \"C:/Users/nayah/source/repos/MUNIDENUNCIA\" status --short)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh pr create --title 'PR05 Clase03 - Semana 3: MFA, Firma Digital, Auditoría y SSRF' --body ' *)",
+      "Bash(where gh *)",
+      "Bash(winget list *)",
+      "Bash(export PATH=\"$PATH:/c/Program Files/GitHub CLI\")",
+      "Bash(gh auth *)",
+      "Bash(gh pr *)",
+      "Bash(pwsh -NonInteractive -File Scripts/Audit-Local.ps1)",
+      "Bash(pwsh -NonInteractive -ExecutionPolicy Bypass -File Scripts/Audit-Local.ps1)",
+      "Bash(dotnet add *)",
+      "Bash(dotnet remove *)",
+      "Bash(dotnet restore *)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(git pull *)",
+      "Bash(dotnet build *)",
+      "Bash(pwsh *)",
+      "Bash(git *)"
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
@@ -27,51 +27,184 @@
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
+
+                        <!-- Inicio -->
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Home" asp-action="Index">
                                 <i class="fas fa-home"></i> Inicio
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Permisos" asp-action="Index">
-                                <i class="fas fa-home"></i> Permisos sin vulnerabilidad
+
+                        <!-- ── Denuncias ── -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-file-alt"></i> Denuncias
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Permisosvulnerable" asp-action="Index">
-                                <i class="fas fa-home"></i> Permisos CON vulnerabilidad
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Denuncias" asp-action="Index">
-                                <i class="fas fa-home"></i> Denuncias CON vulnerabilidad Clase 3
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="DenunciasCla4Vulnerable" asp-action="Index">
-                                <i class="fas fa-home"></i> Denuncias CON vulnerabilidad Clase 4
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="DenunciasCla4" asp-action="Index">
-                                <i class="fas fa-home"></i> Denuncias SIN vulnerabilidad Clase 4 (OK)
-                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <h6 class="dropdown-header">
+                                        <i class="fas fa-shield-alt text-success"></i> Seguros
+                                    </h6>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="DenunciasCla4" asp-action="Index">
+                                        Denuncias Clase 4 — Seguro
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <h6 class="dropdown-header">
+                                        <i class="fas fa-bug text-danger"></i> Con vulnerabilidad (demo)
+                                    </h6>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Denuncias" asp-action="Index">
+                                        Denuncias Clase 3 — Vulnerable
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="DenunciasCla4Vulnerable" asp-action="Index">
+                                        Denuncias Clase 4 — Vulnerable
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="SsrfVulnerable" asp-action="Index">
-                                <i class="fas fa-home"></i> SsrfVulnerableController
+                        <!-- ── Permisos ── -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-id-card"></i> Permisos
                             </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <h6 class="dropdown-header">
+                                        <i class="fas fa-shield-alt text-success"></i> Seguro
+                                    </h6>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Permisos" asp-action="Index">
+                                        Permisos — Seguro
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <h6 class="dropdown-header">
+                                        <i class="fas fa-bug text-danger"></i> Con vulnerabilidad (demo)
+                                    </h6>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Permisosvulnerable" asp-action="Index">
+                                        Permisos — Vulnerable
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="SsrfSeguro" asp-action="Index">
-                                <i class="fas fa-home"></i> SsrfSeguroController
+                        <!-- ── SSRF ── -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-network-wired"></i> SSRF
                             </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <h6 class="dropdown-header">
+                                        <i class="fas fa-shield-alt text-success"></i> Seguro
+                                    </h6>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="SsrfSeguro" asp-action="Index">
+                                        SSRF Seguro
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <h6 class="dropdown-header">
+                                        <i class="fas fa-bug text-danger"></i> Con vulnerabilidad (demo)
+                                    </h6>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="SsrfVulnerable" asp-action="Index">
+                                        SSRF Vulnerable
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="SsrfToctouDemo" asp-action="Index">
+                                        SSRF TOCTOU Demo
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
-                        
+
+                        <!-- ── Integridad / A08 ── -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-lock"></i> Integridad (A08)
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <h6 class="dropdown-header">
+                                        <i class="fas fa-shield-alt text-success"></i> Seguros
+                                    </h6>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="IntegridadSeguro" asp-action="Index">
+                                        Integridad — Seguro
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Firma" asp-action="Index">
+                                        Firma Digital
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <h6 class="dropdown-header">
+                                        <i class="fas fa-bug text-danger"></i> Con vulnerabilidad (demo)
+                                    </h6>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="IntegridadVulnerable" asp-action="Index">
+                                        Integridad — Vulnerable
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- ── Auditoría / A09 — solo Administrador ── -->
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-chart-bar"></i> Auditoría (A09)
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Auditoria" asp-action="Index">
+                                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Auditoria" asp-action="Logs">
+                                            <i class="fas fa-list"></i> Logs completos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Auditoria" asp-action="Exportar">
+                                            <i class="fas fa-download"></i> Exportar CSV firmado
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>

@@ -11,6 +11,8 @@ using MUNIDENUNCIA.Models;
 using MUNIDENUNCIA.Services;
 using Serilog;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Caching.Memory;
 using MUNIDENUNCIA.ViewModels;
 
 namespace MUNIDENUNCIA.Controllers
@@ -29,6 +31,8 @@ namespace MUNIDENUNCIA.Controllers
         // Nuevos para Semana 3 - MFA:
         private readonly TwoFactorAuthService _mfaService;
         private readonly IDataProtector _mfaProtector;
+        private readonly IDataProtector _cookieProtector;
+        private readonly IMemoryCache _cache;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -37,7 +41,8 @@ namespace MUNIDENUNCIA.Controllers
             IEmailService emailService,
             ILogger<AccountController> logger,
             TwoFactorAuthService mfaService,
-            IDataProtectionProvider dataProtectionProvider)
+            IDataProtectionProvider dataProtectionProvider,
+            IMemoryCache cache)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -46,11 +51,13 @@ namespace MUNIDENUNCIA.Controllers
             _logger = logger;
 
             _mfaService = mfaService;
-
-            // ⚠ El purpose string DEBE ser idéntico al que usa ManageController,
-            // sino no podrá descifrar el secreto TOTP guardado en TotpSecret.
+            _cache = cache;
+            // ⚠ Purpose idéntico al de ManageController — descifra el TotpSecret guardado en BD.
             _mfaProtector = dataProtectionProvider.CreateProtector(
                 "MuniDenuncia.Mfa.TotpSecret.v1");
+            // Purpose distinto al de TotpSecret: evita colisión de contexto criptográfico.
+            _cookieProtector = dataProtectionProvider.CreateProtector(
+                "MuniDenuncia.Mfa.PendingCookie.v1");
         }
 
         #region Login
@@ -341,6 +348,7 @@ namespace MUNIDENUNCIA.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("mfa")]
         public async Task<IActionResult> LoginMfa(LoginMfaViewModel modelo)
         {
             if (!ModelState.IsValid) return View(modelo);
@@ -380,6 +388,18 @@ namespace MUNIDENUNCIA.Controllers
             if (esCodigoTotp)
             {
                 codigoValido = _mfaService.VerificarCodigo(secreto, modelo.Codigo);
+                if (codigoValido)
+                {
+                    var replayCacheKey = $"totp:{usuario.Id}:{modelo.Codigo.Trim()}";
+                    if (_cache.TryGetValue(replayCacheKey, out _))
+                    {
+                        _logger.LogWarning("Intento de replay TOTP para usuario {Id}", usuario.Id);
+                        ModelState.AddModelError(nameof(modelo.Codigo),
+                            "Código ya utilizado. Espere el próximo código (30 segundos).");
+                        return View(modelo);
+                    }
+                    _cache.Set(replayCacheKey, true, TimeSpan.FromSeconds(90));
+                }
             }
             else
             {
@@ -391,17 +411,23 @@ namespace MUNIDENUNCIA.Controllers
 
             if (!codigoValido)
             {
-                // Registrar intento fallido de MFA (alta señal para el dashboard A09)
-                _context.AuditLogs.Add(new AuditLog
+                try
                 {
-                    EventType = "MFA_FAILED",
-                    Description = $"Intento fallido de MFA para {usuario.Email}",
-                    IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconocida",
-                    Success = false,
-                    Timestamp = DateTime.UtcNow,
-                    UserId = usuario.Id
-                });
-                await _context.SaveChangesAsync();
+                    _context.AuditLogs.Add(new AuditLog
+                    {
+                        EventType = "MFA_FAILED",
+                        Description = $"Intento fallido de MFA para {usuario.Email}",
+                        IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconocida",
+                        Success = false,
+                        Timestamp = DateTime.UtcNow,
+                        UserId = usuario.Id
+                    });
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "No se pudo registrar MFA_FAILED para usuario {Id}", usuario.Id);
+                }
 
                 ModelState.AddModelError(nameof(modelo.Codigo), "El código no es válido.");
                 return View(modelo);
@@ -410,9 +436,15 @@ namespace MUNIDENUNCIA.Controllers
             // Éxito: completar el SignIn
             if (usoCodigoRespaldo)
             {
-                // Éxito: completar el SignIn (después del await _userManager.UpdateAsync si usó código de respaldo)
                 usuario.UltimoAcceso = DateTime.UtcNow;
-                await _userManager.UpdateAsync(usuario);
+                var updateResult = await _userManager.UpdateAsync(usuario);
+                if (!updateResult.Succeeded)
+                {
+                    // ConcurrencyStamp no coincide: otro request ya consumió este código
+                    ModelState.AddModelError(nameof(modelo.Codigo),
+                        "El código de respaldo ya fue utilizado.");
+                    return View(modelo);
+                }
 
                 _logger.LogWarning("Usuario {Email} usó un código de RESPALDO MFA", usuario.Email);
 
@@ -425,16 +457,23 @@ namespace MUNIDENUNCIA.Controllers
                     true);
             }
 
-            _context.AuditLogs.Add(new AuditLog
+            try
             {
-                EventType = usoCodigoRespaldo ? "MFA_SUCCESS_RECOVERY" : "MFA_SUCCESS",
-                Description = $"Segundo factor completado para {usuario.Email}",
-                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconocida",
-                Success = true,
-                Timestamp = DateTime.UtcNow,
-                UserId = usuario.Id
-            });
-            await _context.SaveChangesAsync();
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    EventType = usoCodigoRespaldo ? "MFA_SUCCESS_RECOVERY" : "MFA_SUCCESS",
+                    Description = $"Segundo factor completado para {usuario.Email}",
+                    IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconocida",
+                    Success = true,
+                    Timestamp = DateTime.UtcNow,
+                    UserId = usuario.Id
+                });
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "No se pudo registrar MFA_SUCCESS para usuario {Id}", usuario.Id);
+            }
 
             // Eliminar la cookie temporal
             Response.Cookies.Delete(MfaPendingCookieName);
@@ -456,13 +495,18 @@ namespace MUNIDENUNCIA.Controllers
 
         private void EstablecerCookieMfaPendiente(string userId, string? returnUrl)
         {
+            var ua = Request.Headers["User-Agent"].ToString();
+            var uaHash = Convert.ToBase64String(
+                SHA256.HashData(Encoding.UTF8.GetBytes(ua[..Math.Min(200, ua.Length)])));
+
             var payload = JsonSerializer.Serialize(new
             {
                 UserId = userId,
                 Return = returnUrl,
-                Exp = DateTime.UtcNow.Add(MfaPendingExpiration)
+                Exp = DateTime.UtcNow.Add(MfaPendingExpiration),
+                UaHash = uaHash
             });
-            var protegido = _mfaProtector.Protect(payload);
+            var protegido = _cookieProtector.Protect(payload);
 
             Response.Cookies.Append(MfaPendingCookieName, protegido, new CookieOptions
             {
@@ -480,12 +524,19 @@ namespace MUNIDENUNCIA.Controllers
 
             try
             {
-                var json = _mfaProtector.Unprotect(valor);
+                var json = _cookieProtector.Unprotect(valor);
                 using var doc = JsonDocument.Parse(json);
                 var root = doc.RootElement;
 
                 var exp = root.GetProperty("Exp").GetDateTime();
                 if (exp < DateTime.UtcNow) return null;
+
+                var ua = Request.Headers["User-Agent"].ToString();
+                var uaActual = Convert.ToBase64String(
+                    SHA256.HashData(Encoding.UTF8.GetBytes(ua[..Math.Min(200, ua.Length)])));
+                var uaGuardado = root.GetProperty("UaHash").GetString();
+                if (!string.Equals(uaActual, uaGuardado, StringComparison.Ordinal))
+                    return null;
 
                 return root.GetProperty("UserId").GetString();
             }
@@ -724,19 +775,27 @@ namespace MUNIDENUNCIA.Controllers
             string userAgent,
             bool success)
         {
-            var log = new AuditLog
+            try
             {
-                UserId = userId,
-                EventType = eventType,
-                Description = description,
-                Timestamp = DateTime.UtcNow,
-                IpAddress = ipAddress,
-                UserAgent = userAgent,
-                Success = success
-            };
+                var log = new AuditLog
+                {
+                    UserId = userId,
+                    EventType = eventType,
+                    Description = description,
+                    Timestamp = DateTime.UtcNow,
+                    IpAddress = ipAddress,
+                    UserAgent = userAgent,
+                    Success = success
+                };
 
-            _context.AuditLogs.Add(log);
-            await _context.SaveChangesAsync();
+                _context.AuditLogs.Add(log);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "No se pudo registrar evento {EventType} para usuario {UserId}",
+                    eventType, userId);
+            }
         }
         #endregion Utilitarios privados
     }
