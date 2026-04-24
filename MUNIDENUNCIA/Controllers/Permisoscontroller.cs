@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MUNIDENUNCIA.Data;
@@ -18,9 +19,11 @@ namespace MUNIDENUNCIA.Controllers
     /// 2. Prevención de SQL Injection usando LINQ to Entities
     /// 3. Prevención de XSS mediante sanitización con HtmlEncoder
     /// 4. Protección CSRF con ValidateAntiForgeryToken
-    /// 
+    /// 5. Autorización basada en roles (A01 - Broken Access Control)
+    ///
     /// Este es el código que debe usarse en producción
     /// </summary>
+    [Authorize]
     public class PermisosController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -41,6 +44,7 @@ namespace MUNIDENUNCIA.Controllers
         /// <summary>
         /// Lista todas las solicitudes de permisos
         /// </summary>
+        [Authorize(Roles = "Funcionario,Administrador")]
         public async Task<IActionResult> Index()
         {
             var solicitudes = await _context.SolicitudesPermisos
@@ -147,6 +151,7 @@ namespace MUNIDENUNCIA.Controllers
         /// <summary>
         /// Muestra formulario de búsqueda
         /// </summary>
+        [Authorize(Roles = "Funcionario,Administrador")]
         public IActionResult Buscar()
         {
             return View(new BusquedaSolicitudValidadaViewModel());
@@ -159,6 +164,7 @@ namespace MUNIDENUNCIA.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Funcionario,Administrador")]
         public async Task<IActionResult> Buscar(BusquedaSolicitudValidadaViewModel model)
         {
             if (!ModelState.IsValid)
@@ -242,6 +248,7 @@ namespace MUNIDENUNCIA.Controllers
         /// Búsqueda segura usando SQL directo con FromSqlInterpolated
         /// Solo usar cuando LINQ no pueda expresar la consulta necesaria
         /// </summary>
+        [Authorize(Roles = "Funcionario,Administrador")]
         public async Task<IActionResult> BuscarConSQLParametrizado(string cedula)
         {
             if (string.IsNullOrWhiteSpace(cedula))
@@ -268,6 +275,7 @@ namespace MUNIDENUNCIA.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken] // CORRECCIÓN #4: Protección CSRF
+        [Authorize(Roles = "Funcionario,Administrador")]
         public async Task<IActionResult> AgregarComentario(ComentarioValidadoViewModel model)
         {
             // ✅ SEGURO: Verificación obligatoria de validación
